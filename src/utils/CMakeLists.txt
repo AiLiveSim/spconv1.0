@@ -7,9 +7,9 @@ set_target_properties(spconv_nms PROPERTIES SOVERSION 1)
 set_property(TARGET spconv_nms PROPERTY CXX_STANDARD 14)
 set_property(TARGET spconv_nms PROPERTY CUDA_STANDARD 14)
 
-target_include_directories(
-    spconv_nms
-        PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(spconv_nms
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/include)
 
 target_link_libraries(spconv_nms
     CUDA::cudart)
@@ -30,9 +30,9 @@ set_target_properties(spconv_utils
         "${PYTHON_MODULE_PREFIX}"
     SUFFIX "${PYTHON_MODULE_EXTENSION}")
 
-target_include_directories(
-    spconv_utils
-        PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_include_directories(spconv_utils
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/include)
 
 target_link_libraries(spconv_utils
     spconv_nms

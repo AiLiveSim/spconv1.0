@@ -10,8 +10,9 @@ add_library(spconv SHARED
 target_compile_definitions(spconv PRIVATE CUDA_NO_HALF __CUDA_NO_HALF_CONVERSIONS__ __CUDA_NO_HALF_OPERATORS__ __CUDA_NO_HALF2_OPERATORS__)
 
 target_include_directories(spconv
-    PRIVATE
+    PUBLIC
         ${PROJECT_SOURCE_DIR}/include
+    PRIVATE
         ${TORCH_INCLUDE_DIRS})
 
 target_link_libraries(spconv
