@@ -1,9 +1,24 @@
-add_library(spconv SHARED all.cc indice.cc indice.cu 
-            reordering.cc reordering.cu maxpool.cc maxpool.cu)
+add_library(spconv SHARED
+            all.cc
+            indice.cc
+            indice.cu 
+            reordering.cc
+            reordering.cu
+            maxpool.cc
+            maxpool.cu)
 
-target_include_directories(spconv PRIVATE ${ALL_INCLUDE} )
-set_property(TARGET spconv PROPERTY CUDA_STANDARD 14)
-set_property(TARGET spconv PROPERTY CXX_STANDARD 14)
+target_compile_definitions(spconv PRIVATE CUDA_NO_HALF __CUDA_NO_HALF_CONVERSIONS__ __CUDA_NO_HALF_OPERATORS__ __CUDA_NO_HALF2_OPERATORS__)
+
+target_include_directories(spconv
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/include
+        ${TORCH_INCLUDE_DIRS})
+
+target_link_libraries(spconv
+    torch
+    CUDA::cudart 
+    CUDA::cublas)
+
 set_target_properties(spconv PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
-target_link_libraries(spconv PRIVATE ${ALL_LIBS})
-install (TARGETS spconv DESTINATION lib)
+
+install(TARGETS spconv DESTINATION lib)

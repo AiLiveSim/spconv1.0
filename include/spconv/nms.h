@@ -21,6 +21,7 @@
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 #include <vector>
+#include <iostream>
 #include "box_iou.h"
 #include "nms_gpu.h"
 namespace spconv {
