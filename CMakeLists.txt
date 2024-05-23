@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 project(SparseConv LANGUAGES CXX CUDA VERSION 1.0)
 
 option(SPCONV_BuildTests "Build the unit tests when BUILD_TESTING is enabled." OFF)
@@ -7,25 +7,31 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Set CUDA architectures
 set(CMAKE_CUDA_ARCHITECTURES "52;60;61;70;75" CACHE STRING "Supported CUDA architectures" FORCE)
 
+# The reason this needs to be set, take a look at https://stackoverflow.com/questions/62693218/how-to-solve-gtest-and-libtorch-linkage-conflict
+# If this is not used, GTest linking fails if linking against PyTorch
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+
 # Include the FetchContent module
 include(FetchContent)
 
-# Fetch Catch2
-FetchContent_Declare(
-  catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.0.1 # Specify the tag, branch, or commit you want to use
-)
+# Fetch GTest
+ FetchContent_Declare(
+   googletest
+   GIT_REPOSITORY https://github.com/google/googletest.git
+   GIT_TAG v1.14.0
+ )
 
 # Fetch pybind11
 FetchContent_Declare(
   pybind11
   GIT_REPOSITORY https://github.com/pybind/pybind11.git
-  GIT_TAG v2.11.0 # Specify the tag, branch, or commit you want to use
+  GIT_TAG v2.11.0
+  OVERRIDE_FIND_PACKAGE
 )
 
 # Set C++ version to 17 -> you need a compiler that is C++17 compatible
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Instruct Caffe to use CUDNN
 set(CAFFE2_USE_CUDNN True)
@@ -52,11 +58,12 @@ if(NOT DEFINED Torch_DIR)
     endif()
 endif()
 
+FetchContent_MakeAvailable(pybind11)
+
 # Find required packages
 find_package(CUDAToolkit REQUIRED)
 find_package(Torch REQUIRED)
 find_package(fmt REQUIRED)
-FetchContent_MakeAvailable(pybind11)
 
 # Add subdirectories
 add_subdirectory(src/spconv)
@@ -65,9 +72,9 @@ add_subdirectory(src/utils)
 # Add tests
 if(SPCONV_BuildTests)
     # Make the content available
-    FetchContent_MakeAvailable(catch2)
     enable_testing()
     include(CTest)
-    include(Catch)
+    FetchContent_MakeAvailable(googletest)
+    include(GoogleTest)
     add_subdirectory(test)
 endif()

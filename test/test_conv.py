@@ -1,11 +1,11 @@
 # Copyright 2019 Yan Yan
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,36 +13,53 @@
 # limitations under the License.
 
 from pathlib import Path
-import spconv 
+import spconv
 import torch
-from torch import nn 
-import numpy as np 
-import time 
+from torch import nn
+import numpy as np
+import time
 from spconv.test_utils import params_grid, generate_sparse_data, TestCase
 import unittest
-import sparseconvnet as scn 
+import sparseconvnet as scn
+
 
 class SparseConv3dTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size,
-                 stride, padding, dilation):
+    def __init__(
+        self,
+        num_layers,
+        ndim,
+        shape,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+    ):
         super().__init__()
-        layers = [spconv.SparseConv3d(
+        layers = [
+            spconv.SparseConv3d(
                 in_channels,
                 out_channels,
                 kernel_size,
                 stride,
                 padding=padding,
                 dilation=dilation,
-                bias=False)]
+                bias=False,
+            )
+        ]
         for i in range(1, num_layers):
-            layers.append(spconv.SparseConv3d(
-                out_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                padding=padding,
-                dilation=dilation,
-                bias=False))
+            layers.append(
+                spconv.SparseConv3d(
+                    out_channels,
+                    out_channels,
+                    kernel_size,
+                    stride,
+                    padding=padding,
+                    dilation=dilation,
+                    bias=False,
+                )
+            )
         self.net = spconv.SparseSequential(
             *layers,
         )
@@ -52,30 +69,47 @@ class SparseConv3dTestTorch(nn.Module):
 
     def forward(self, features, coors, batch_size):
         coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors,self.shape, batch_size, self.grid)
-        return self.net(x)# .dense()
+        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size, self.grid)
+        return self.net(x)  # .dense()
+
 
 class SubMConv3dTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size,
-                 stride, padding, dilation):
+    def __init__(
+        self,
+        num_layers,
+        ndim,
+        shape,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+    ):
         super().__init__()
-        layers = [spconv.SubMConv3d(
+        layers = [
+            spconv.SubMConv3d(
                 in_channels,
                 out_channels,
                 kernel_size,
                 stride,
                 padding=padding,
                 dilation=dilation,
-                bias=False)]
+                bias=False,
+            )
+        ]
         for i in range(1, num_layers):
-            layers.append(spconv.SubMConv3d(
-                out_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                padding=padding,
-                dilation=dilation,
-                bias=False))
+            layers.append(
+                spconv.SubMConv3d(
+                    out_channels,
+                    out_channels,
+                    kernel_size,
+                    stride,
+                    padding=padding,
+                    dilation=dilation,
+                    bias=False,
+                )
+            )
         self.net = spconv.SparseSequential(
             *layers,
         )
@@ -84,61 +118,93 @@ class SubMConv3dTestTorch(nn.Module):
 
     def forward(self, features, coors, batch_size):
         coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors,self.shape, batch_size, self.grid)
-        return self.net(x)# .dense()
+        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size, self.grid)
+        return self.net(x)  # .dense()
 
 
 class Conv3dTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size,
-                 stride, padding, dilation):
+    def __init__(
+        self,
+        num_layers,
+        ndim,
+        shape,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+    ):
         super().__init__()
-        layers = [nn.Conv3d(
+        layers = [
+            nn.Conv3d(
                 in_channels,
                 out_channels,
                 kernel_size,
                 stride,
                 padding=padding,
                 dilation=dilation,
-                bias=False)]
+                bias=False,
+            )
+        ]
         for i in range(1, num_layers):
-            layers.append(nn.Conv3d(
-                out_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                padding=padding,
-                dilation=dilation,
-                bias=False))
+            layers.append(
+                nn.Conv3d(
+                    out_channels,
+                    out_channels,
+                    kernel_size,
+                    stride,
+                    padding=padding,
+                    dilation=dilation,
+                    bias=False,
+                )
+            )
         self.net = nn.Sequential(
             *layers,
         )
         self.shape = shape
 
     def forward(self, x):
-        return self.net(x)# .dense()
+        return self.net(x)  # .dense()
 
 
 class SparseDeConv3dTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size,
-                 stride, padding, dilation):
+    def __init__(
+        self,
+        num_layers,
+        ndim,
+        shape,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+    ):
         super().__init__()
-        layers = [spconv.SparseConvTranspose3d(
+        layers = [
+            spconv.SparseConvTranspose3d(
                 in_channels,
                 out_channels,
                 kernel_size,
                 stride,
                 padding=padding,
                 dilation=dilation,
-                bias=False)]
+                bias=False,
+            )
+        ]
         for i in range(1, num_layers):
-            layers.append(spconv.SparseConvTranspose3d(
-                out_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                padding=padding,
-                dilation=dilation,
-                bias=False))
+            layers.append(
+                spconv.SparseConvTranspose3d(
+                    out_channels,
+                    out_channels,
+                    kernel_size,
+                    stride,
+                    padding=padding,
+                    dilation=dilation,
+                    bias=False,
+                )
+            )
         self.net = spconv.SparseSequential(
             *layers,
         )
@@ -146,50 +212,64 @@ class SparseDeConv3dTestTorch(nn.Module):
 
     def forward(self, features, coors, batch_size):
         coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors,self.shape, batch_size)
-        return self.net(x)# .dense()
+        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size)
+        return self.net(x)  # .dense()
+
 
 class DeConv3dTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size,
-                 stride, padding, dilation):
+    def __init__(
+        self,
+        num_layers,
+        ndim,
+        shape,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+    ):
         super().__init__()
-        layers = [nn.ConvTranspose3d(
+        layers = [
+            nn.ConvTranspose3d(
                 in_channels,
                 out_channels,
                 kernel_size,
                 stride,
                 padding=padding,
                 dilation=dilation,
-                bias=False)]
+                bias=False,
+            )
+        ]
         for i in range(1, num_layers):
-            layers.append(nn.ConvTranspose3d(
-                out_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                padding=padding,
-                dilation=dilation,
-                bias=False))
+            layers.append(
+                nn.ConvTranspose3d(
+                    out_channels,
+                    out_channels,
+                    kernel_size,
+                    stride,
+                    padding=padding,
+                    dilation=dilation,
+                    bias=False,
+                )
+            )
         self.net = nn.Sequential(
             *layers,
         )
         self.shape = shape
 
     def forward(self, x):
-        return self.net(x)# .dense()
+        return self.net(x)  # .dense()
 
 
 class SparseMaxPoolTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, kernel_size,
-                 stride, padding, dilation):
+    def __init__(self, num_layers, ndim, shape, kernel_size, stride, padding, dilation):
         super().__init__()
-        layers = [spconv.SparseMaxPool3d(
-                kernel_size,
-                stride, padding, dilation)]
+        layers = [spconv.SparseMaxPool3d(kernel_size, stride, padding, dilation)]
         for i in range(1, num_layers):
-            layers.append(spconv.SparseMaxPool3d(
-                kernel_size,
-                stride, padding, dilation))
+            layers.append(
+                spconv.SparseMaxPool3d(kernel_size, stride, padding, dilation)
+            )
         self.net = spconv.SparseSequential(
             *layers,
         )
@@ -197,37 +277,39 @@ class SparseMaxPoolTestTorch(nn.Module):
 
     def forward(self, features, coors, batch_size):
         coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size )
-        return self.net(x)# .dense()
+        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size)
+        return self.net(x)  # .dense()
+
 
 class MaxPool3dTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, kernel_size,
-                 stride, padding, dilation):
+    def __init__(self, num_layers, ndim, shape, kernel_size, stride, padding, dilation):
         super().__init__()
-        layers = [nn.MaxPool3d(
-                kernel_size,
-                stride, padding, dilation)]
+        layers = [nn.MaxPool3d(kernel_size, stride, padding, dilation)]
         for i in range(1, num_layers):
-            layers.append(nn.MaxPool3d(
-                kernel_size,
-                stride, padding, dilation))
+            layers.append(nn.MaxPool3d(kernel_size, stride, padding, dilation))
         self.net = nn.Sequential(
             *layers,
         )
         self.shape = shape
 
     def forward(self, x):
-        return self.net(x)# .dense()
+        return self.net(x)  # .dense()
 
 
 class SubmanifoldConvTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size, stride):
+    def __init__(
+        self, num_layers, ndim, shape, in_channels, out_channels, kernel_size, stride
+    ):
         super().__init__()
-        layers = [spconv.SubMConv3d(
-                in_channels, out_channels, kernel_size, bias=False, indice_key="subm0")]
+        layers = [
+            spconv.SubMConv3d(
+                in_channels, out_channels, kernel_size, bias=False, indice_key="subm0"
+            )
+        ]
         for i in range(1, num_layers):
-            layers.append(spconv.SubMConv3d(
-                out_channels, out_channels, kernel_size, bias=False))
+            layers.append(
+                spconv.SubMConv3d(out_channels, out_channels, kernel_size, bias=False)
+            )
         self.net = nn.Sequential(
             *layers,
         )
@@ -235,29 +317,23 @@ class SubmanifoldConvTestTorch(nn.Module):
 
     def forward(self, features, coors, batch_size):
         coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size )
+        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size)
         return self.net(x)
 
+
 class SCNCoupleDeConvTest(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size,
-                 stride):
+    def __init__(
+        self, num_layers, ndim, shape, in_channels, out_channels, kernel_size, stride
+    ):
         super().__init__()
         self.scn_input = scn.InputLayer(ndim, shape, mode=0)
         self.net = nn.Sequential(
             scn.Convolution(
-                ndim,
-                in_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                bias=False),
+                ndim, in_channels, out_channels, kernel_size, stride, bias=False
+            ),
             scn.Deconvolution(
-                ndim,
-                out_channels,
-                in_channels,
-                kernel_size,
-                stride,
-                bias=False),
+                ndim, out_channels, in_channels, kernel_size, stride, bias=False
+            ),
             scn.SparseToDense(ndim, in_channels),
         )
 
@@ -266,9 +342,11 @@ class SCNCoupleDeConvTest(nn.Module):
         x = self.scn_input((coors, features))
         return self.net(x)
 
+
 class SparseCoupleDeConvTest(nn.Module):
-    def __init__(self, num_layers, ndim, shape, in_channels, out_channels, kernel_size,
-                 stride):
+    def __init__(
+        self, num_layers, ndim, shape, in_channels, out_channels, kernel_size, stride
+    ):
         super().__init__()
         self.net = spconv.SparseSequential(
             spconv.SparseConv3d(
@@ -277,32 +355,30 @@ class SparseCoupleDeConvTest(nn.Module):
                 kernel_size,
                 stride,
                 indice_key="cp0",
-                bias=False),
+                bias=False,
+            ),
             spconv.SparseInverseConv3d(
-                out_channels,
-                in_channels,
-                kernel_size,
-                indice_key="cp0",
-                bias=False),
-            
+                out_channels, in_channels, kernel_size, indice_key="cp0", bias=False
+            ),
         )
         self.todense = spconv.ToDense()
         self.shape = shape
 
     def forward(self, features, coors, batch_size):
         coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors,self.shape, batch_size )
-        return self.todense(self.net(x))# .dense()
+        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size)
+        return self.todense(self.net(x))  # .dense()
 
 
 def gather_nd(params, indices):
     # this function has a limit that MAX_ADVINDEX_CALC_DIMS=5
     ndim = indices.shape[-1]
-    output_shape = list(indices.shape[:-1]) + list(params.shape[indices.shape[-1]:])
+    output_shape = list(indices.shape[:-1]) + list(params.shape[indices.shape[-1] :])
     flatted_indices = indices.view(-1, ndim)
     slices = [flatted_indices[:, i] for i in range(ndim)]
     slices += [Ellipsis]
     return params[slices].view(*output_shape)
+
 
 def scatter_nd(indices, updates, shape):
     """pytorch edition of tensorflow scatter_nd.
@@ -312,7 +388,7 @@ def scatter_nd(indices, updates, shape):
     """
     ret = torch.zeros(*shape, dtype=updates.dtype, device=updates.device)
     ndim = indices.shape[-1]
-    output_shape = list(indices.shape[:-1]) + shape[indices.shape[-1]:]
+    output_shape = list(indices.shape[:-1]) + shape[indices.shape[-1] :]
     flatted_indices = indices.view(-1, ndim)
     slices = [flatted_indices[:, i] for i in range(ndim)]
     slices += [Ellipsis]
@@ -321,7 +397,7 @@ def scatter_nd(indices, updates, shape):
 
 
 class TestSpConv(TestCase):
-    
+
     def testSpConv3d(self):
         np.random.seed(484)
         devices = ["cpu:0"]
@@ -336,17 +412,27 @@ class TestSpConv(TestCase):
         dilations = [1, 2, 3]
 
         for dev, shape, bs, IC, OC, k, s, p, d in params_grid(
-            devices, shapes, batchsizes, in_channels, out_channels, ksizes, 
-            strides, paddings, dilations):
+            devices,
+            shapes,
+            batchsizes,
+            in_channels,
+            out_channels,
+            ksizes,
+            strides,
+            paddings,
+            dilations,
+        ):
             if all([s > 1, d > 1]):
-                continue # don't support this.
+                continue  # don't support this.
             device = torch.device(dev)
             num_points = [1000] * bs
 
             sparse_dict = generate_sparse_data(shape, num_points, IC)
 
             features = np.ascontiguousarray(sparse_dict["features"]).astype(np.float32)
-            indices = np.ascontiguousarray(sparse_dict["indices"][:, [3, 0, 1, 2]]).astype(np.int32)
+            indices = np.ascontiguousarray(
+                sparse_dict["indices"][:, [3, 0, 1, 2]]
+            ).astype(np.int32)
             features_dense = sparse_dict["features_dense"].astype(np.float32)
             filters = np.random.uniform(0, 1, size=[k, k, k, IC, OC]).astype(np.float32)
             indices_t = torch.from_numpy(indices).int().to(device)
@@ -357,7 +443,9 @@ class TestSpConv(TestCase):
             net = SparseConv3dTestTorch(1, 3, shape, IC, OC, k, s, p, d).to(device)
             net_ref = Conv3dTestTorch(1, 3, shape, IC, OC, k, s, p, d).to(device)
             filters_t = torch.from_numpy(filters).to(device)
-            net_ref.net[0].weight.data[:] = filters_t.permute(4, 3, 0, 1, 2).contiguous()
+            net_ref.net[0].weight.data[:] = filters_t.permute(
+                4, 3, 0, 1, 2
+            ).contiguous()
             net.net[0].weight.data[:] = filters_t
             out_ref = net_ref(features_dense_t)
             out = net(features_t, indices_t, bs).dense()
@@ -365,7 +453,9 @@ class TestSpConv(TestCase):
             dout_t = torch.from_numpy(dout).to(device)
             out.backward(dout_t)
             out_ref.backward(dout_t)
-            din_dense = features_dense_t.grad.detach().permute(0, 2, 3, 4, 1).contiguous()
+            din_dense = (
+                features_dense_t.grad.detach().permute(0, 2, 3, 4, 1).contiguous()
+            )
             din_sparse = gather_nd(din_dense, indices_t.long())
             din = features_t.grad.detach()
             din_np = din.cpu().numpy()
@@ -380,7 +470,7 @@ class TestSpConv(TestCase):
             out_np = out.detach().cpu().numpy()
             out_ref_np = out_ref.detach().cpu().numpy()
             self.assertAllClose(out_np, out_ref_np, atol=1e-4)
-    
+
     def testSpDeConv3d(self):
         np.random.seed(484)
         devices = ["cuda:0", "cpu:0"]
@@ -395,17 +485,27 @@ class TestSpConv(TestCase):
         dilations = [1, 2, 3]
 
         for dev, shape, bs, IC, OC, k, s, p, d in params_grid(
-            devices, shapes, batchsizes, in_channels, out_channels, ksizes, 
-            strides, paddings, dilations):
+            devices,
+            shapes,
+            batchsizes,
+            in_channels,
+            out_channels,
+            ksizes,
+            strides,
+            paddings,
+            dilations,
+        ):
             if all([s > 1, d > 1]):
-                continue # don't support this.
+                continue  # don't support this.
             device = torch.device(dev)
             num_points = [1000] * bs
 
             sparse_dict = generate_sparse_data(shape, num_points, IC)
 
             features = np.ascontiguousarray(sparse_dict["features"]).astype(np.float32)
-            indices = np.ascontiguousarray(sparse_dict["indices"][:, [3, 0, 1, 2]]).astype(np.int32)
+            indices = np.ascontiguousarray(
+                sparse_dict["indices"][:, [3, 0, 1, 2]]
+            ).astype(np.int32)
             features_dense = sparse_dict["features_dense"].astype(np.float32)
             filters = np.random.uniform(0, 1, size=[k, k, k, IC, OC]).astype(np.float32)
             indices_t = torch.from_numpy(indices).int().to(device)
@@ -416,7 +516,9 @@ class TestSpConv(TestCase):
             net = SparseDeConv3dTestTorch(1, 3, shape, IC, OC, k, s, p, d).to(device)
             net_ref = DeConv3dTestTorch(1, 3, shape, IC, OC, k, s, p, d).to(device)
             filters_t = torch.from_numpy(filters).to(device)
-            net_ref.net[0].weight.data[:] = filters_t.permute(3, 4, 0, 1, 2).contiguous()
+            net_ref.net[0].weight.data[:] = filters_t.permute(
+                3, 4, 0, 1, 2
+            ).contiguous()
             net.net[0].weight.data[:] = filters_t
             out_ref = net_ref(features_dense_t)
             out = net(features_t, indices_t, bs).dense()
@@ -424,7 +526,9 @@ class TestSpConv(TestCase):
             dout_t = torch.from_numpy(dout).to(device)
             out.backward(dout_t)
             out_ref.backward(dout_t)
-            din_dense = features_dense_t.grad.detach().permute(0, 2, 3, 4, 1).contiguous()
+            din_dense = (
+                features_dense_t.grad.detach().permute(0, 2, 3, 4, 1).contiguous()
+            )
             din_sparse = gather_nd(din_dense, indices_t.long())
             din = features_t.grad.detach()
             din_np = din.cpu().numpy()
@@ -439,7 +543,7 @@ class TestSpConv(TestCase):
             out_np = out.detach().cpu().numpy()
             out_ref_np = out_ref.detach().cpu().numpy()
             self.assertAllClose(out_np, out_ref_np, atol=1e-4)
-    
+
     def testSpCpConv3d(self):
         np.random.seed(484)
         devices = ["cuda:0", "cpu:0"]
@@ -454,15 +558,17 @@ class TestSpConv(TestCase):
         dilations = [1, 2, 3]
 
         for dev, shape, bs, IC, OC, k, s in params_grid(
-            devices, shapes, batchsizes, in_channels, out_channels, ksizes, 
-            strides):
+            devices, shapes, batchsizes, in_channels, out_channels, ksizes, strides
+        ):
             device = torch.device(dev)
             num_points = [1000] * bs
 
             sparse_dict = generate_sparse_data(shape, num_points, IC)
 
             features = np.ascontiguousarray(sparse_dict["features"]).astype(np.float32)
-            indices = np.ascontiguousarray(sparse_dict["indices"][:, [3, 0, 1, 2]]).astype(np.int32)
+            indices = np.ascontiguousarray(
+                sparse_dict["indices"][:, [3, 0, 1, 2]]
+            ).astype(np.int32)
             features_dense = sparse_dict["features_dense"].astype(np.float32)
             filters = np.random.uniform(0, 1, size=[k, k, k, IC, OC]).astype(np.float32)
             indices_t = torch.from_numpy(indices).int().to(device)
@@ -474,8 +580,12 @@ class TestSpConv(TestCase):
 
             net_ref = SCNCoupleDeConvTest(1, 3, shape, IC, OC, k, s).to(device)
             net = SparseCoupleDeConvTest(1, 3, shape, IC, OC, k, s).to(device)
-            net_ref.net[0].weight.data[:] = net.net[0].weight.data[:].view(*net_ref.net[0].weight.shape)
-            net_ref.net[1].weight.data[:] = net.net[1].weight.data[:].view(*net_ref.net[1].weight.shape)
+            net_ref.net[0].weight.data[:] = (
+                net.net[0].weight.data[:].view(*net_ref.net[0].weight.shape)
+            )
+            net_ref.net[1].weight.data[:] = (
+                net.net[1].weight.data[:].view(*net_ref.net[1].weight.shape)
+            )
             out_ref = net_ref(features_ref_t, indices_scn_t, bs)
             out = net(features_t, indices_t, bs)
             dout = np.random.uniform(-0.2, 0.2, out_ref.shape).astype(features.dtype)
@@ -496,8 +606,6 @@ class TestSpConv(TestCase):
             out_ref_np = out_ref.detach().cpu().numpy()
             self.assertAllClose(out_np, out_ref_np, atol=1e-4)
 
-
-    
     def testSpMaxPool3d(self):
         np.random.seed(485)
         devices = ["cuda:0", "cpu:0"]
@@ -512,17 +620,29 @@ class TestSpConv(TestCase):
         dilations = [1, 2, 3]
 
         for dev, shape, bs, IC, OC, k, s, p, d in params_grid(
-            devices, shapes, batchsizes, in_channels, out_channels, ksizes, 
-            strides, paddings, dilations):
+            devices,
+            shapes,
+            batchsizes,
+            in_channels,
+            out_channels,
+            ksizes,
+            strides,
+            paddings,
+            dilations,
+        ):
             if all([s > 1, d > 1]):
-                continue # don't support this.
+                continue  # don't support this.
             device = torch.device(dev)
             num_points = [1000] * bs
             # when data contains negative, sparse maxpool is not equal to dense maxpool.
-            sparse_dict = generate_sparse_data(shape, num_points, IC, data_range=[0.1, 1])
+            sparse_dict = generate_sparse_data(
+                shape, num_points, IC, data_range=[0.1, 1]
+            )
 
             features = np.ascontiguousarray(sparse_dict["features"]).astype(np.float32)
-            indices = np.ascontiguousarray(sparse_dict["indices"][:, [3, 0, 1, 2]]).astype(np.int32)
+            indices = np.ascontiguousarray(
+                sparse_dict["indices"][:, [3, 0, 1, 2]]
+            ).astype(np.int32)
             features_dense = sparse_dict["features_dense"].astype(np.float32)
             filters = np.random.uniform(0, 1, size=[k, k, k, IC, OC]).astype(np.float32)
             indices_t = torch.from_numpy(indices).int().to(device)
@@ -539,24 +659,28 @@ class TestSpConv(TestCase):
             outfeatures = out.features
             out_dense = out.dense(channels_first=False)
             out = out_dense.permute(0, 4, 1, 2, 3).contiguous()
-            
-            dout_sparse = np.random.uniform(-0.2, 0.2, outfeatures.shape).astype(features.dtype)
+
+            dout_sparse = np.random.uniform(-0.2, 0.2, outfeatures.shape).astype(
+                features.dtype
+            )
             dout_sparse_t = torch.from_numpy(dout_sparse).to(device)
             dout_t = scatter_nd(outids.long(), dout_sparse_t, list(out_dense.shape))
             dout_t = dout_t.permute(0, 4, 1, 2, 3).contiguous()
             out.backward(dout_t)
             out_ref.backward(dout_t)
-            din_dense = features_dense_t.grad.detach().permute(0, 2, 3, 4, 1).contiguous()
+            din_dense = (
+                features_dense_t.grad.detach().permute(0, 2, 3, 4, 1).contiguous()
+            )
             din_sparse = gather_nd(din_dense, indices_t.long())
             din = features_t.grad.detach()
             din_np = din.cpu().numpy()
             din_sparse_np = din_sparse.cpu().numpy()
             self.assertAllClose(din_np, din_sparse_np, atol=1e-4)
-            
+
             out_np = out.detach().cpu().numpy()
             out_ref_np = out_ref.detach().cpu().numpy()
             self.assertAllClose(out_np, out_ref_np, atol=1e-4)
-    
+
 
 def main():
     # function for develop.
@@ -565,7 +689,6 @@ def main():
     shapes = [[50, 30, 30]]
     batchsizes = [3]
 
-    
     in_channels = [256]
     out_channels = [256]
     ksizes = [3]
@@ -574,8 +697,16 @@ def main():
     dilations = [1]
 
     for dev, shape, bs, IC, OC, k, s, p, d in params_grid(
-        devices, shapes, batchsizes, in_channels, out_channels, ksizes, 
-        strides, paddings, dilations):
+        devices,
+        shapes,
+        batchsizes,
+        in_channels,
+        out_channels,
+        ksizes,
+        strides,
+        paddings,
+        dilations,
+    ):
         if all([s > 1, d > 1]):
             continue
         device = torch.device(dev)
@@ -584,13 +715,15 @@ def main():
         sparse_dict = generate_sparse_data(shape, num_points, IC)
 
         features = np.ascontiguousarray(sparse_dict["features"]).astype(np.float32)
-        indices = np.ascontiguousarray(sparse_dict["indices"][:, [3, 0, 1, 2]]).astype(np.int32)
+        indices = np.ascontiguousarray(sparse_dict["indices"][:, [3, 0, 1, 2]]).astype(
+            np.int32
+        )
         features_dense = sparse_dict["features_dense"].astype(np.float32)
         indices_t = torch.from_numpy(indices)
         filters = np.random.uniform(0, 1, size=[k, k, k, IC, OC]).astype(np.float32)
         indices_t = torch.from_numpy(indices).int().to(device).half()
         features_t = torch.from_numpy(features).to(device).half()
-        
+
         features_dense_t = torch.from_numpy(features_dense).to(device).half()
         net = SparseConv3dTestTorch(1, 3, shape, IC, OC, k, s, p, d).to(device).half()
         net_ref = Conv3dTestTorch(1, 3, shape, IC, OC, k, s, p, d).to(device).half()
@@ -605,14 +738,14 @@ def main():
             torch.cuda.synchronize()
             times.append(time.time() - t)
         # print((net.grid == -1).float().sum(), net.grid.numel())
-            # print("spconv time", time.time() - t)
+        # print("spconv time", time.time() - t)
         print("spconv time", np.mean(times[2:]))
         out = net(features_t, indices_t, bs).dense()
-        print(np.linalg.norm(out.detach().cpu().numpy() - out_ref.detach().cpu().numpy()))
+        print(
+            np.linalg.norm(out.detach().cpu().numpy() - out_ref.detach().cpu().numpy())
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # main()
     unittest.main()
-
-
