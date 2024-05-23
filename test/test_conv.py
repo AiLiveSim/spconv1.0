@@ -27,16 +27,39 @@ import unittest
 class SparseConv3dTestTorch(nn.Module):
     def __init__(
         self,
-        num_layers,
-        ndim,
-        shape,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
+        num_layers: int,
+        ndim: int,
+        shape: int,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
     ):
+        """Sparse 3D convolutional network
+
+        Parameters
+        ----------
+        num_layers : int
+            Numbers of layers.
+        ndim : int
+            Numbers of dimensions.(not used)
+        shape : int
+            shape
+        in_channels : int
+            Number of input channels
+        out_channels : int
+            Number of output channels
+        kernel_size : int
+            kernel_size
+        stride : int
+            stride
+        padding : int
+            padding
+        dilation : int
+            dilation
+        """
         super().__init__()
         layers = [
             spconv.SparseConv3d(
@@ -74,68 +97,42 @@ class SparseConv3dTestTorch(nn.Module):
         return self.net(x)  # .dense()
 
 
-class SubMConv3dTestTorch(nn.Module):
-    def __init__(
-        self,
-        num_layers,
-        ndim,
-        shape,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
-    ):
-        super().__init__()
-        layers = [
-            spconv.SubMConv3d(
-                in_channels,
-                out_channels,
-                kernel_size,
-                stride,
-                padding=padding,
-                dilation=dilation,
-                bias=False,
-            )
-        ]
-        for i in range(1, num_layers):
-            layers.append(
-                spconv.SubMConv3d(
-                    out_channels,
-                    out_channels,
-                    kernel_size,
-                    stride,
-                    padding=padding,
-                    dilation=dilation,
-                    bias=False,
-                )
-            )
-        self.net = spconv.SparseSequential(
-            *layers,
-        )
-        self.grid = torch.full([3, *shape], -1, dtype=torch.int32).cuda()
-        self.shape = shape
-
-    def forward(self, features, coors, batch_size):
-        coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size, self.grid)
-        return self.net(x)  # .dense()
-
-
 class Conv3dTestTorch(nn.Module):
     def __init__(
         self,
-        num_layers,
-        ndim,
-        shape,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
+        num_layers: int,
+        ndim: int,
+        shape: int,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
     ):
+        """3D Convulation Network from torch.nn
+
+        Parameters
+        ----------
+        num_layers : int
+            Numbers of layers.
+        ndim : int
+            Numbers of dimensions.(not used)
+        shape : int
+            shape
+        in_channels : int
+            Number of input channels
+        out_channels : int
+            Number of output channels
+        kernel_size : int
+            kernel_size
+        stride : int
+            stride
+        padding : int
+            padding
+        dilation : int
+            dilation
+        """
         super().__init__()
         layers = [
             nn.Conv3d(
@@ -172,16 +169,39 @@ class Conv3dTestTorch(nn.Module):
 class SparseDeConv3dTestTorch(nn.Module):
     def __init__(
         self,
-        num_layers,
-        ndim,
-        shape,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
+        num_layers: int,
+        ndim: int,
+        shape: int,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
     ):
+        """Sparse 3D DeConvulation Network
+
+        Parameters
+        ----------
+        num_layers : int
+            Numbers of layers.
+        ndim : int
+            Numbers of dimensions.(not used)
+        shape : int
+            shape
+        in_channels : int
+            Number of input channels
+        out_channels : int
+            Number of output channels
+        kernel_size : int
+            kernel_size
+        stride : int
+            stride
+        padding : int
+            padding
+        dilation : int
+            dilation
+        """
         super().__init__()
         layers = [
             spconv.SparseConvTranspose3d(
@@ -220,16 +240,39 @@ class SparseDeConv3dTestTorch(nn.Module):
 class DeConv3dTestTorch(nn.Module):
     def __init__(
         self,
-        num_layers,
-        ndim,
-        shape,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
+        num_layers: int,
+        ndim: int,
+        shape: int,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
     ):
+        """3D DeConvulation Network based on Pytorch
+
+        Parameters
+        ----------
+        num_layers : int
+            Numbers of layers.
+        ndim : int
+            Numbers of dimensions.(not used)
+        shape : int
+            shape
+        in_channels : int
+            Number of input channels
+        out_channels : int
+            Number of output channels
+        kernel_size : int
+            kernel_size
+        stride : int
+            stride
+        padding : int
+            padding
+        dilation : int
+            dilation
+        """
         super().__init__()
         layers = [
             nn.ConvTranspose3d(
@@ -264,7 +307,35 @@ class DeConv3dTestTorch(nn.Module):
 
 
 class SparseMaxPoolTestTorch(nn.Module):
-    def __init__(self, num_layers, ndim, shape, kernel_size, stride, padding, dilation):
+    def __init__(
+        self,
+        num_layers: int,
+        ndim: int,
+        shape: int,
+        kernel_size: int,
+        stride: int,
+        padding: int,
+        dilation: int,
+    ):
+        """Sparse Max Pool Network
+
+        Parameters
+        ----------
+        num_layers : int
+            Numbers of layers.
+        ndim : int
+            Numbers of dimensions.(not used)
+        shape : int
+            shape
+        kernel_size : int
+            kernel_size
+        stride : int
+            stride
+        padding : int
+            padding
+        dilation : int
+            dilation
+        """
         super().__init__()
         layers = [spconv.SparseMaxPool3d(kernel_size, stride, padding, dilation)]
         for i in range(1, num_layers):
@@ -295,31 +366,6 @@ class MaxPool3dTestTorch(nn.Module):
 
     def forward(self, x):
         return self.net(x)  # .dense()
-
-
-class SubmanifoldConvTestTorch(nn.Module):
-    def __init__(
-        self, num_layers, ndim, shape, in_channels, out_channels, kernel_size, stride
-    ):
-        super().__init__()
-        layers = [
-            spconv.SubMConv3d(
-                in_channels, out_channels, kernel_size, bias=False, indice_key="subm0"
-            )
-        ]
-        for i in range(1, num_layers):
-            layers.append(
-                spconv.SubMConv3d(out_channels, out_channels, kernel_size, bias=False)
-            )
-        self.net = nn.Sequential(
-            *layers,
-        )
-        self.shape = shape
-
-    def forward(self, features, coors, batch_size):
-        coors = coors.int()
-        x = spconv.SparseConvTensor(features, coors, self.shape, batch_size)
-        return self.net(x)
 
 
 # Networks for the commented test. Uncomment it if you want to use it.
