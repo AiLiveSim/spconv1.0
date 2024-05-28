@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 project(SparseConv LANGUAGES CXX CUDA VERSION 1.0)
 
 option(SPCONV_BuildTests "Build the unit tests when BUILD_TESTING is enabled." OFF)
+
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set CUDA architectures
@@ -11,8 +12,16 @@ set(CMAKE_CUDA_ARCHITECTURES "52;60;61;70;75" CACHE STRING "Supported CUDA archi
 # If this is not used, GTest linking fails if linking against PyTorch
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 
+# Set C++ standard to C++17 or later
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Include the FetchContent module
 include(FetchContent)
+
+# Boost support
+include(cmake/Boost.cmake)
 
 # Fetch GTest
  FetchContent_Declare(
@@ -29,9 +38,17 @@ FetchContent_Declare(
   OVERRIDE_FIND_PACKAGE
 )
 
-# Set C++ version to 17 -> you need a compiler that is C++17 compatible
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+FetchContent_MakeAvailable(pybind11)
+
+# Fetch fmt
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG 10.2.1
+  OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_MakeAvailable(fmt)
 
 # Instruct Caffe to use CUDNN
 set(CAFFE2_USE_CUDNN True)
@@ -57,8 +74,6 @@ if(NOT DEFINED Torch_DIR)
         endif()
     endif()
 endif()
-
-FetchContent_MakeAvailable(pybind11)
 
 # Find required packages
 find_package(CUDAToolkit REQUIRED)

@@ -12,10 +12,12 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
 
 1. Install Nvidia GPU driver that supports CUDA 11.7 or later
 2. Create `spconv` Conda environment using these [instructions](conda/README.md)
-3. Install [CMake](https://apt.kitware.com/), `build-essential`, `git`, `libfmt-dev` and `libboost-all-dev` packages
-4. Activate the `spconv` environment: `conda activate spconv`
-5. Build the package: `python setup.py bdist_wheel`
-6. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
+3. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
+4. Install a C++14 (or higher) compatible compiler. In Ubuntu you can install `build-essential` package
+5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`
+6. Activate the `spconv` environment: `conda activate spconv`
+7. Build the package: `python setup.py bdist_wheel`
+8. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 
 ## Compare with SparseConvNet
 
