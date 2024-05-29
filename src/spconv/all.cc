@@ -15,20 +15,19 @@
 #include <cuda_runtime_api.h>
 #include <spconv/pool_ops.h>
 #include <spconv/spconv_ops.h>
+#include <torch/script.h> // For torch::jit::RegisterOperators
 
-static auto registry =
-    torch::jit::RegisterOperators("spconv::get_indice_pairs_2d", &spconv::getIndicePair<2>)
-        .op("spconv::get_indice_pairs_3d", &spconv::getIndicePair<3>)
-        .op("spconv::get_indice_pairs_grid_2d", &spconv::getIndicePairPreGrid<2>)
-        .op("spconv::get_indice_pairs_grid_3d", &spconv::getIndicePairPreGrid<3>)
-        .op("spconv::indice_conv_fp32", &spconv::indiceConv<float>)
-        .op("spconv::indice_conv_backward_fp32", &spconv::indiceConvBackward<float>)
-        .op("spconv::indice_conv_half", &spconv::indiceConv<at::Half>)
-        .op("spconv::indice_conv_backward_half",
-            &spconv::indiceConvBackward<at::Half>)
-        .op("spconv::indice_maxpool_fp32", &spconv::indiceMaxPool<float>)
-        .op("spconv::indice_maxpool_backward_fp32",
-            &spconv::indiceMaxPoolBackward<float>)
-        .op("spconv::indice_maxpool_half", &spconv::indiceMaxPool<at::Half>)
-        .op("spconv::indice_maxpool_backward_half",
-            &spconv::indiceMaxPoolBackward<at::Half>);
+TORCH_LIBRARY(spconv, m) {
+    m.def("get_indice_pairs_2d", &spconv::getIndicePair<2>);
+    m.def("get_indice_pairs_3d", &spconv::getIndicePair<3>);
+    m.def("get_indice_pairs_grid_2d", &spconv::getIndicePairPreGrid<2>);
+    m.def("get_indice_pairs_grid_3d", &spconv::getIndicePairPreGrid<3>);
+    m.def("indice_conv_fp32", &spconv::indiceConv<float>);
+    m.def("indice_conv_backward_fp32", &spconv::indiceConvBackward<float>);
+    m.def("indice_conv_half", &spconv::indiceConv<at::Half>);
+    m.def("indice_conv_backward_half", &spconv::indiceConvBackward<at::Half>);
+    m.def("indice_maxpool_fp32", &spconv::indiceMaxPool<float>);
+    m.def("indice_maxpool_backward_fp32", &spconv::indiceMaxPoolBackward<float>);
+    m.def("indice_maxpool_half", &spconv::indiceMaxPool<at::Half>);
+    m.def("indice_maxpool_backward_half", &spconv::indiceMaxPoolBackward<at::Half>);
+}

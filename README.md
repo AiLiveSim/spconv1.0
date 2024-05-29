@@ -1,5 +1,4 @@
-This is not what I realized. The original author is [yan yan](https://github.com/traveller59), this project provides convenience for everyone to download the spcov1.0 version.
-
+This version provides `spconv` version 1.0
 
 # SpConv: PyTorch Spatially Sparse Convolution Library
 
@@ -9,19 +8,16 @@ If you need more kinds of spatial layers such as avg pool, please implement it b
 
 The GPU Indice Generation algorithm is a unofficial implementation of paper [SECOND](http://www.mdpi.com/1424-8220/18/10/3337). That algorithm (don't include GPU SubM indice generation algorithm) may be protected by patent.
 
-This project only support CUDA 9.0+. If you are using cuda 8.0, please update it to 9.0.
+## Build Locally
 
-## Install 
-
-0. Use ```git clone xxx.git --recursive``` to clone this repo.
-
-1. Install boost headers to your system include path, you can use either ```sudo apt-get install libboostall-dev``` or download compressed files from boost official website and copy headers to include path.
-
-2. Download cmake >= 3.13.2, then add cmake executables to PATH.
-
-3. Ensure you have install pytorch 1.0 in your environment, run ```python setup.py bdist_wheel``` (don't use ```python setup.py install```).
-
-4. Run ```cd ./dist```, use pip to install generated whl file.
+1. Install Nvidia GPU driver that supports CUDA 11.7 or later
+2. Create `spconv` Conda environment using these [instructions](conda/README.md)
+3. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
+4. Install a C++14 (or higher) compatible compiler. In Ubuntu you can install `build-essential` package
+5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`
+6. Activate the `spconv` environment: `conda activate spconv`
+7. Build the package: `python setup.py bdist_wheel`
+8. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 
 ## Compare with SparseConvNet
 

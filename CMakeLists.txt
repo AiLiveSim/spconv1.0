@@ -1,45 +1,95 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 project(SparseConv LANGUAGES CXX CUDA VERSION 1.0)
 
-option(SPCONV_BuildTests "Build the unit tests when BUILD_TESTING is enabled." ON)
-set(CMAKE_CXX_EXTENSIONS OFF) # avoid gnu++11 be added to CXX flags
+option(SPCONV_BuildTests "Build the unit tests when BUILD_TESTING is enabled." OFF)
 
-set(CUDA_TOOLKIT_ROOT_DIR "${CMAKE_CUDA_COMPILER}")
-get_filename_component(CUDA_TOOLKIT_ROOT_DIR "${CUDA_TOOLKIT_ROOT_DIR}" DIRECTORY)
-get_filename_component(CUDA_TOOLKIT_ROOT_DIR "${CUDA_TOOLKIT_ROOT_DIR}" DIRECTORY)
-if(WIN32) # true if windows (32 and 64 bit)
-    set(CUDA_LIB_PATH_HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64")
-    add_compile_definitions(TV_WINDOWS)
-else()
-    set(CUDA_LIB_PATH_HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64")
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Set CUDA architectures
+set(CMAKE_CUDA_ARCHITECTURES "52;60;61;70;75" CACHE STRING "Supported CUDA architectures" FORCE)
+
+# The reason this needs to be set, take a look at https://stackoverflow.com/questions/62693218/how-to-solve-gtest-and-libtorch-linkage-conflict
+# If this is not used, GTest linking fails if linking against PyTorch
+add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
+
+# Set C++ standard to C++17 or later
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Include the FetchContent module
+include(FetchContent)
+
+# Boost support
+include(cmake/Boost.cmake)
+
+# Fetch GTest
+ FetchContent_Declare(
+   googletest
+   GIT_REPOSITORY https://github.com/google/googletest.git
+   GIT_TAG v1.14.0
+ )
+
+# Fetch pybind11
+FetchContent_Declare(
+  pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11.git
+  GIT_TAG v2.11.0
+  OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_MakeAvailable(pybind11)
+
+# Fetch fmt
+FetchContent_Declare(
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG 10.2.1
+  OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_MakeAvailable(fmt)
+
+# Instruct Caffe to use CUDNN
+set(CAFFE2_USE_CUDNN True)
+
+# If Torch_DIR has not been defined, automatically look for TorchConfig.cmake in the
+# activated Conda environment
+if(NOT DEFINED Torch_DIR)
+    # Find Torch based on the activated Conda environment
+    if(DEFINED ENV{CONDA_PREFIX})
+        # Look for TorchConfig.cmake files in the activated Conda environment
+        file(GLOB_RECURSE CONDA_TORCH_CONFIG_FILE_LIST $ENV{CONDA_PREFIX}/*/TorchConfig.cmake)
+
+        if(CONDA_TORCH_CONFIG_FILE_LIST)
+            # Extract the first element from the list
+            list(GET CONDA_TORCH_CONFIG_FILE_LIST 0 CONDA_TORCH_CONFIG_FILE_PATH)
+            message(STATUS "Found TorchConfig.cmake at ${CONDA_TORCH_CONFIG_FILE_PATH}")
+            # Get the directory from the path to the TorchConfig.cmake file
+            get_filename_component(CONDA_TORCH_CONFIG_DIR ${CONDA_TORCH_CONFIG_FILE_PATH} DIRECTORY)
+            # Set Torch_DIR so that Torch will be found by find_package
+            set(Torch_DIR ${CONDA_TORCH_CONFIG_DIR} CACHE PATH "The directory containing a CMAKE configuration file for Torch." FORCE)
+        else()
+            message(WARNING "Did not find TorchConfig.cmake at ${CONDA_TORCH_PATH}")
+        endif()
+    endif()
 endif()
 
-find_library(CUDA_CUDART NAMES cudart HINTS ${CUDA_LIB_PATH_HINTS})
-find_library(CUDA_CUBLAS NAMES cublas HINTS ${CUDA_LIB_PATH_HINTS})
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_definitions(TV_DEBUG)
-endif()
-
+# Find required packages
+find_package(CUDAToolkit REQUIRED)
 find_package(Torch REQUIRED)
+find_package(fmt REQUIRED)
 
-# add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
-
-add_compile_definitions(SPCONV_CUDA)
-add_subdirectory(third_party/pybind11)
-
-set(ALL_LIBS ${CUDA_CUDART} ${CUDA_CUBLAS} ${TORCH_LIBRARIES}) 
-
-set(ALL_INCLUDE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} 
-    ${PROJECT_SOURCE_DIR}/include)
-
-
+# Add subdirectories
 add_subdirectory(src/spconv)
 add_subdirectory(src/utils)
 
-if (SPCONV_BuildTests)
-    include(CTest) #adds option BUILD_TESTING (default ON)
-    if(BUILD_TESTING)
-        enable_testing()
-        add_subdirectory(test)
-    endif()
+# Add tests
+if(SPCONV_BuildTests)
+    # Make the content available
+    enable_testing()
+    include(CTest)
+    FetchContent_MakeAvailable(googletest)
+    include(GoogleTest)
+    add_subdirectory(test)
 endif()
