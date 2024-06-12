@@ -16,8 +16,16 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
 4. Install a C++14 (or higher) compatible compiler. In Ubuntu you can install `build-essential` package
 5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`
 6. Activate the `spconv` environment: `conda activate spconv`
-7. Build the package: `python setup.py bdist_wheel`
-8. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
+7. After having activated the `spconv` environment, you have to modify the environment variable `PATH` so that the nvcc-compiler in the Conda environment's
+`pkgs/cuda-toolkit/bin` path is found. 
+
+```bash
+export PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH
+which nvcc # Check that the correct nvcc-compiler is found
+```
+
+8. Build the package: `python setup.py bdist_wheel`
+9. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 
 ## Compare with SparseConvNet
 
