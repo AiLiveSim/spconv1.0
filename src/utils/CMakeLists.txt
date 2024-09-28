@@ -19,8 +19,6 @@ install(TARGETS spconv_nms DESTINATION lib)
 #--------------
 # spconv_utils
 #--------------
-find_package(Boost REQUIRED)
-
 add_library(spconv_utils SHARED all.cc)
 set_target_properties(spconv_utils PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(spconv_utils PROPERTIES SOVERSION 1)

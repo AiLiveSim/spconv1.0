@@ -7,7 +7,15 @@
 # - Boost_INCLUDE_DIRS
 # - Boost, Boost:boost and Boost::headers targets for linking
 
-find_package(Boost)
+find_package(Boost CONFIG)
+
+# If Boost is not found, we need git to fetch the contents
+if(NOT Boost_FOUND)
+    find_package(Git)
+    if(NOT Git_FOUND)
+      message("Git not found, required for fetching Boost")
+    endif()
+endif()
 
 if(NOT Boost_FOUND)
     message(STATUS "Adding Boost support using FetchContent")
@@ -81,7 +89,6 @@ if(NOT Boost_FOUND)
     
     # Mark Boost as found
     set(Boost_FOUND ON CACHE BOOL "Boost found" FORCE)
-
 else()
     message(STATUS "Found native Boost installation")
 endif()
