@@ -20,6 +20,15 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Include the FetchContent module
 include(FetchContent)
 
+# If a Conda environment is enabled, we look for the CUDA toolkit in that environment
+if(DEFINED ENV{CONDA_PREFIX})
+    message(STATUS "CONDA environment detected, path: $ENV{CONDA_PREFIX}")
+    set(CUDAToolkit_ROOT $ENV{CONDA_PREFIX} CACHE PATH "Path to CUDA toolkit")
+    set(CUDA_TOOLKIT_ROOT_DIR $ENV{CONDA_PREFIX} CACHE PATH "CUDA Toolkit directory path (used by older/other find_package implementations)")
+endif()
+
+find_package(CUDAToolkit)
+
 # Boost support
 include(cmake/Boost.cmake)
 
