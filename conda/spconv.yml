@@ -1,4 +1,4 @@
-name: spconv-cuda11.7
+name: spconv
 channels:
     - pytorch
     - nvidia

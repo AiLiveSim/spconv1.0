@@ -21,7 +21,7 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
 
 Linux/Unix:
 ```bash
-export PATH=$CONDA_PREFIX/bin:$PATH
+export PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH
 export CUDA_PATH=$CONDA_PREFIX
 export CUDA_HOME=$CONDA_PREFIX
 which nvcc # Check that the correct nvcc-compiler is found
