@@ -31,15 +31,18 @@ namespace tv {
 #define TV_DEVICE_INLINE __forceinline__ __device__
 #define TV_HOST_DEVICE __device__ __host__
 #define TV_ASSERT(expr) assert(expr)
+#define TV_HOST_INLINE __forceinline__ __host__
 #elif defined(__CUDACC_RTC__)
 #define TV_ASSERT(expr) assert(expr)
 #define TV_HOST_DEVICE_INLINE __forceinline__ __device__
 #define TV_DEVICE_INLINE __forceinline__ __device__
 #define TV_HOST_DEVICE __device__ __host__
+#define TV_HOST_INLINE inline
 #else
 #define TV_ASSERT(x) assert(x)
 #define TV_HOST_DEVICE_INLINE inline
 #define TV_HOST_DEVICE
+#define TV_HOST_INLINE inline
 #endif
 
 #define TV_REQUIRE(expr, ...)                                                  \
@@ -418,7 +421,7 @@ TV_HOST_DEVICE_INLINE unsigned rowArrayIdx(std::vector<int> &shape,
   return offset;
 }
 
-TV_HOST_DEVICE_INLINE unsigned rowArrayIdx(std::vector<int> &shape,
+TV_HOST_INLINE unsigned rowArrayIdx(std::vector<int> &shape,
                                            std::vector<int> &indexes_vec) {
   unsigned offset = 0;
   unsigned m = 1;

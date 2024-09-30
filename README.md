@@ -19,9 +19,20 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
 7. After having activated the `spconv` environment, you have to modify the environment variable `PATH` so that the nvcc-compiler in the Conda environment's
 `pkgs/cuda-toolkit/bin` path is found. 
 
+Linux/Unix:
 ```bash
-export PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH
+export PATH=$CONDA_PREFIX/bin:$PATH
+export CUDA_PATH=$CONDA_PREFIX
+export CUDA_HOME=$CONDA_PREFIX
 which nvcc # Check that the correct nvcc-compiler is found
+```
+
+Windows PowerShell:
+```bash
+$env:PATH = "$env:CONDA_PREFIX\bin;$env:PATH"
+$env:CUDA_HOME = "$env:CONDA_PREFIX"
+$env:CUDA_PATH = "$env:CONDA_PREFIX"
+Get-Command nvcc
 ```
 
 8. Build the package: `python setup.py bdist_wheel`

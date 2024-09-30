@@ -62,7 +62,35 @@ if(NOT Boost_FOUND)
       GIT_TAG boost-1.81.0
     )
 
-    FetchContent_MakeAvailable(boost_config boost_core boost_assert boost_concept_check boost_static_assert boost_throw_exception boost_geometry)
+    FetchContent_Declare(
+      boost_range
+      GIT_REPOSITORY https://github.com/boostorg/range.git
+      GIT_TAG        boost-1.81.0
+    )
+
+    FetchContent_Declare(
+    boost_preprocessor
+    GIT_REPOSITORY https://github.com/boostorg/preprocessor.git
+    GIT_TAG        boost-1.81.0
+    )
+    
+    FetchContent_Declare(
+    boost_mpl
+    GIT_REPOSITORY https://github.com/boostorg/mpl.git
+    GIT_TAG        boost-1.81.0
+    )
+
+    FetchContent_MakeAvailable(
+        boost_config
+        boost_core
+        boost_assert
+        boost_concept_check
+        boost_static_assert
+        boost_throw_exception
+        boost_geometry
+        boost_range
+        boost_preprocessor
+        boost_mpl)
 
     # Add all the fetched include directories to Boost_INCLUDE_DIRS
     list(APPEND Boost_INCLUDE_DIRS_TEMP
@@ -72,7 +100,10 @@ if(NOT Boost_FOUND)
         ${boost_concept_check_SOURCE_DIR}/include
         ${boost_static_assert_SOURCE_DIR}/include
         ${boost_throw_exception_SOURCE_DIR}/include
-        ${boost_geometry_SOURCE_DIR}/include)
+        ${boost_geometry_SOURCE_DIR}/include
+        ${boost_range_SOURCE_DIR}/include
+        ${boost_preprocessor_SOURCE_DIR}/include
+        ${boost_mpl_SOURCE_DIR}/include)
     set(Boost_INCLUDE_DIRS ${Boost_INCLUDE_DIRS_TEMP} CACHE STRING "Paths to includes" FORCE)
 
     # Create an imported target
@@ -92,4 +123,3 @@ if(NOT Boost_FOUND)
 else()
     message(STATUS "Found native Boost installation")
 endif()
-

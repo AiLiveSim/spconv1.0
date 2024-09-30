@@ -1,4 +1,4 @@
-name: spconv
+name: spconv-cuda11.7
 channels:
     - pytorch
     - nvidia
@@ -11,6 +11,8 @@ dependencies:
     - pytorch-cuda=11.7
     - cudatoolkit-dev=11.7
     - cudnn=8.9
+    - nvtx
+    - boost=1.85.0
 #    - mkl
     - pip
     - pip:
