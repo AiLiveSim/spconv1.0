@@ -1,117 +1,89 @@
 cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 project(SparseConv LANGUAGES CXX CUDA VERSION 1.0)
 
+
+
+
+
+
+
+
+
+# Option to build tests
 option(SPCONV_BuildTests "Build the unit tests when BUILD_TESTING is enabled." OFF)
 
+# Set C++ standard and disable extensions
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Set CUDA architectures
 set(CMAKE_CUDA_ARCHITECTURES "52;60;61;70;75" CACHE STRING "Supported CUDA architectures" FORCE)
 
-# Append the -allow-unsupported-compiler flag to the CUDA flags
+# Append the -allow-unsupported-compiler flag to the CUDA flags if using Visual Studio
 if (CMAKE_GENERATOR MATCHES "Visual Studio")
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
 endif()
 
-# The reason this needs to be set, take a look at https://stackoverflow.com/questions/62693218/how-to-solve-gtest-and-libtorch-linkage-conflict
-# If this is not used, GTest linking fails if linking against PyTorch
+# Fix for GTest linking issues with PyTorch
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
-
-# Set C++ standard to C++17 or later
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Include the FetchContent module
 include(FetchContent)
 
-# If a Conda environment is enabled, we look for the CUDA toolkit in that environment
-if(DEFINED ENV{CONDA_PREFIX})
-    message(STATUS "CONDA environment detected, path: $ENV{CONDA_PREFIX}")
-    set(CUDAToolkit_ROOT "$ENV{CONDA_PREFIX}" CACHE PATH "Path to CUDA toolkit")
-    set(CUDA_TOOLKIT_ROOT_DIR $ENV{CONDA_PREFIX} CACHE PATH "CUDA Toolkit directory path (used by older/other find_package implementations)")
-    # Some Caffe2 find-package(s) need these if we want to find cudnn in Windows
-    set(CUDNN_LIBRARY "$ENV{CONDA_PREFIX};$ENV{CONDA_PREFIX}/Library" CACHE PATH "CUDNN directory path (used by some Caffe2 find-packages)")
-    set(CUDNN_INCLUDE_DIR "$ENV{CONDA_PREFIX};$ENV{CONDA_PREFIX}/Library" CACHE PATH "CUDNN directory path (used by some Caffe2 find-packages)")
-    set(NVTOOLEXT_HOME $ENV{CONDA_PREFIX} CACHE PATH "Some pre-built PyTorch versions require this")
-    # Boost should be installed in the environment
-    list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}/Library/lib/cmake/Boost-1.85.0")
-endif()
+# Set paths for global CUDA installation (12.4)
+set(CUDA_TOOLKIT_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4" CACHE PATH "CUDA Toolkit directory path")
+set(CUDAToolkit_ROOT "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4" CACHE PATH "Path to CUDA toolkit")
+set(CUDNN_LIBRARY "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/lib/x64/cudnn.lib" CACHE PATH "CUDNN library path")
+set(CUDNN_INCLUDE_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/include" CACHE PATH "CUDNN include directory path")
+set(NVTOOLEXT_HOME "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4" CACHE PATH "Path for some pre-built PyTorch versions")
 
-find_package(CUDAToolkit)
-
-# Boost support
-#include(cmake/Boost.cmake)
-
-find_package(Boost CONFIG)
+# Append Boost path
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/yuihs/Downloads/boost_1_82_0/lib/cmake/Boost-1.85.0")
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/yuihs/Downloads/libtorch-win-shared-with-deps-2.4.1+cu124/libtorch")
+# Find required packages
+find_package(CUDAToolkit REQUIRED)
+set(Boost_ROOT "C:/Users/yuihs/Downloads/boost_1_82_0")
+find_package(Boost REQUIRED)
 
 # Fetch GTest
- FetchContent_Declare(
-   googletest
-   GIT_REPOSITORY https://github.com/google/googletest.git
-   GIT_TAG v1.14.0
+FetchContent_Declare(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG v1.14.0
 )
 
 # Fetch pybind11
 FetchContent_Declare(
-  pybind11
-  GIT_REPOSITORY https://github.com/pybind/pybind11.git
-  GIT_TAG v2.11.0
-  OVERRIDE_FIND_PACKAGE
+    pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG v2.11.0
+    OVERRIDE_FIND_PACKAGE
 )
-
-FetchContent_MakeAvailable(pybind11)
 
 # Fetch fmt
 FetchContent_Declare(
-  fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG 10.2.1
-  OVERRIDE_FIND_PACKAGE
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt
+    GIT_TAG 10.2.1
+    OVERRIDE_FIND_PACKAGE
 )
 
-FetchContent_MakeAvailable(fmt)
+# Make fetched content available
+FetchContent_MakeAvailable(pybind11 fmt googletest)
 
-# Instruct Caffe to use CUDNN
+# Instruct Caffe2 to use CUDNN
 set(CAFFE2_USE_CUDNN True)
-
-# If Torch_DIR has not been defined, automatically look for TorchConfig.cmake in the
-# activated Conda environment
-if(NOT DEFINED Torch_DIR)
-    # Find Torch based on the activated Conda environment
-    if(DEFINED ENV{CONDA_PREFIX})
-        # Look for TorchConfig.cmake files in the activated Conda environment
-        file(GLOB_RECURSE CONDA_TORCH_CONFIG_FILE_LIST $ENV{CONDA_PREFIX}/*/TorchConfig.cmake)
-
-        if(CONDA_TORCH_CONFIG_FILE_LIST)
-            # Extract the first element from the list
-            list(GET CONDA_TORCH_CONFIG_FILE_LIST 0 CONDA_TORCH_CONFIG_FILE_PATH)
-            message(STATUS "Found TorchConfig.cmake at ${CONDA_TORCH_CONFIG_FILE_PATH}")
-            # Get the directory from the path to the TorchConfig.cmake file
-            get_filename_component(CONDA_TORCH_CONFIG_DIR ${CONDA_TORCH_CONFIG_FILE_PATH} DIRECTORY)
-            # Set Torch_DIR so that Torch will be found by find_package
-            set(Torch_DIR ${CONDA_TORCH_CONFIG_DIR} CACHE PATH "The directory containing a CMAKE configuration file for Torch." FORCE)
-        else()
-            message(WARNING "Did not find TorchConfig.cmake at ${CONDA_TORCH_PATH}")
-        endif()
-    endif()
-endif()
-
-# Find required packages
-find_package(CUDAToolkit REQUIRED)
 find_package(Torch REQUIRED)
-find_package(fmt REQUIRED)
 
 # Add subdirectories
 add_subdirectory(src/spconv)
 add_subdirectory(src/utils)
 
-# Add tests
+# Add tests if option is enabled
 if(SPCONV_BuildTests)
-    # Make the content available
     enable_testing()
     include(CTest)
-    FetchContent_MakeAvailable(googletest)
     include(GoogleTest)
     add_subdirectory(test)
 endif()
