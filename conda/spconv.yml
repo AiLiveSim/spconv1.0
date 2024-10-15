@@ -6,13 +6,13 @@ channels:
     - anaconda
 dependencies:
     - python=3.10
-    - pytorch==2.0.1
-    - torchvision==0.15.2
-    - pytorch-cuda=11.7
-    - cudatoolkit-dev=11.7
-    - cudnn=8.9
+    - pytorch
+    - torchvision
+    - pytorch-cuda
+    - cudatoolkit-dev
+    - cudnn
     - nvtx
-    - boost=1.85.0
+    - boost
 #    - mkl
     - pip
     - pip:

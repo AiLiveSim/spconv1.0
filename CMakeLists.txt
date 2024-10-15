@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.24 FATAL_ERROR)
 project(SparseConv LANGUAGES CXX CUDA VERSION 1.0)
 
-
-
-
-
-
-
-
-
 # Option to build tests
 option(SPCONV_BuildTests "Build the unit tests when BUILD_TESTING is enabled." OFF)
 
@@ -39,11 +31,11 @@ set(CUDNN_INCLUDE_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/
 set(NVTOOLEXT_HOME "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4" CACHE PATH "Path for some pre-built PyTorch versions")
 
 # Append Boost path
-list(APPEND CMAKE_PREFIX_PATH "C:/Users/yuihs/Downloads/boost_1_82_0/lib/cmake/Boost-1.85.0")
-list(APPEND CMAKE_PREFIX_PATH "C:/Users/yuihs/Downloads/libtorch-win-shared-with-deps-2.4.1+cu124/libtorch")
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/User/Downloads/boost_1_86_0/boost_1_86_0")
+list(APPEND CMAKE_PREFIX_PATH "C:/Users/User/Downloads/libtorch-win-shared-with-deps-2.4.1+cu124/libtorch")
 # Find required packages
 find_package(CUDAToolkit REQUIRED)
-set(Boost_ROOT "C:/Users/yuihs/Downloads/boost_1_82_0")
+set(Boost_ROOT "C:/Users/User/Downloads/boost_1_86_0")
 find_package(Boost REQUIRED)
 
 # Fetch GTest
