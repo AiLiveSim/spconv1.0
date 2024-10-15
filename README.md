@@ -22,7 +22,7 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
     1. In Ubuntu you can install `build-essential` package
     2. In Windows you need to install Visual Studio version that is compatible with CUDA 11.7
 5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`.
-On ubuntu:
+In ubuntu:
 ```
 sudo apt-get install boost
 ```
@@ -39,7 +39,6 @@ which nvcc # Check that the correct nvcc-compiler is found
 export "LIBRARY_PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/lib64:$LIBRARY_PATH"
 ```
 
-8. 
 8. Build the package: `python setup.py bdist_wheel`
 9. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 
