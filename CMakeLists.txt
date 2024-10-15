@@ -23,6 +23,7 @@ add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 # Include the FetchContent module
 include(FetchContent)
 
+#ANCHOR
 # Set paths for global CUDA installation (12.4)
 set(CUDA_TOOLKIT_ROOT_DIR "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4" CACHE PATH "CUDA Toolkit directory path")
 set(CUDAToolkit_ROOT "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4" CACHE PATH "Path to CUDA toolkit")

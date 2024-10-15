@@ -28,13 +28,7 @@ which nvcc # Check that the correct nvcc-compiler is found
 ```
 
 Windows PowerShell:
-```bash
-$env:PATH = "$env:CONDA_PREFIX\bin;$env:PATH"
-$env:CUDA_HOME = "$env:CONDA_PREFIX"
-$env:CUDA_PATH = "$env:CONDA_PREFIX"
-Get-Command nvcc
-```
-
+Download cuda [here](https://developer.nvidia.com/cuda-12-4-0-download-archive), boost [here](https://www.boost.org/users/download/) and pytorch here.
 8. Build the package: `python setup.py bdist_wheel`
 9. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 

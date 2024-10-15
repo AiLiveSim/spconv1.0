@@ -15,12 +15,19 @@ class CMakeBuild(build_ext):
         install_directory = os.path.abspath(os.path.join(self.build_lib, ext.name))
         os.makedirs(build_directory, exist_ok=True)
         os.makedirs(install_directory, exist_ok=True)
-        cmake_args = [
-            f'-DCMAKE_INSTALL_PREFIX={install_directory}',
-            f'-DPYTHON_EXECUTABLE={sys.executable}',
-        ]
-        build_args = ['--config', 'Release', '-j8']
+        if sys.platform == "linux" or sys.platform == "linux2": 
+            cmake_args = [
+                f'-DCMAKE_INSTALL_PREFIX={install_directory}',
+                f'-DPYTHON_EXECUTABLE={sys.executable}',
+            ]  
+        else :
+            cmake_args = [
+                f'-DCMAKE_INSTALL_PREFIX={install_directory}',
+                f'DCMAKE_TOOLCHAIN_FILE=./windows_TC.cmake',
+                f'-DPYTHON_EXECUTABLE={sys.executable}',
+            ]  
 
+        build_args = ['--config', 'Release', '-j8']
         subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
         subprocess.check_call(['cmake', '--install', '.'], cwd=self.build_temp)
