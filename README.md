@@ -19,7 +19,30 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
     2. In Ubuntu use the [./conda/spconv-linux.yml](./conda/spconv-linux.yml) when creating the environment
 4. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
 5. Install a C++14 (or higher) compatible compiler. It must be compatible with the installed CUDA version (some [compatibilities](https://gist.github.com/ax3l/9489132)).
-    1. In Ubuntu you can install `build-essential` package
+    1. In Ubuntu you can install `build-essential` package<br>
+    If a specific version of g++ and gcc is needed, follow this instructions for a Linux based system (from [stackoverflow](https://askubuntu.com/questions/26498/how-to-choose-the-default-gcc-and-g-version)).
+    ```sh
+    # First remove update-alternatives for gcc and g++
+    sudo update-alternatives --remove-all gcc 
+    sudo update-alternatives --remove-all g++
+    # Install required gcc and g++ packages (e.g. gcc and g++ 11)
+    sudo apt-get install gcc-11 g++-11
+    # Install alternatives
+    # sudo update-alternatives --install <link> <name> <path> <priority>
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 10
+
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 10
+
+    sudo update-alternatives --install /usr/bin/cc cc /usr/bin/gcc 30
+    sudo update-alternatives --set cc /usr/bin/gcc
+
+    sudo update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++ 30
+    sudo update-alternatives --set c++ /usr/bin/g++
+
+    # If multiple alternatives are installed, configuration of the default commands for gcc and g++ can be done interactively
+    sudo update-alternatives --config gcc
+    sudo update-alternatives --config g++
+    ```
     2. In Windows you need to install Visual Studio version that is compatible with CUDA 11.7
 5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`.
 In ubuntu:
@@ -27,8 +50,7 @@ In ubuntu:
 sudo apt-get install boost
 ```
 6. Activate the `spconv` environment: `conda activate spconv`
-7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variablew `PATH` and `LIBRARY_PATH` so that the nvcc-compiler in the Conda environment's
-`pkgs/cuda-toolkit/bin` and `pkgs/cuda-toolkit/lib64` paths are found. 
+7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variables `PATH`, `LIBRARY_PATH` and `CPATH` so that the nvcc-compiler, the cuda headers and libraries in the Conda environment's paths are found. 
 
 Linux/Unix:
 ```bash
@@ -37,6 +59,7 @@ export "CUDA_PATH=$CONDA_PREFIX"
 export "CUDA_HOME=$CONDA_PREFIX"
 which nvcc # Check that the correct nvcc-compiler is found
 export "LIBRARY_PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/lib64:$LIBRARY_PATH"
+export "CPATH=$CONDA_PREFIX/pkgs/cuda-toolkit/include:$CPATH"
 ```
 
 8. Build the package: `python setup.py bdist_wheel`
