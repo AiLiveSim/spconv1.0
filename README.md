@@ -18,21 +18,28 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
     1. In Windows use the [./conda/spconv-windows.yml](./conda/spconv-windows.yml) when creating the environment
     2. In Ubuntu use the [./conda/spconv-linux.yml](./conda/spconv-linux.yml) when creating the environment
 4. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
-5. Install a C++14 (or higher) compatible compiler. 
+5. Install a C++14 (or higher) compatible compiler. It must be compatible with the installed CUDA version (some [compatibilities](https://gist.github.com/ax3l/9489132)).
     1. In Ubuntu you can install `build-essential` package
     2. In Windows you need to install Visual Studio version that is compatible with CUDA 11.7
+5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`.
+On ubuntu:
+```
+sudo apt-get install boost
+```
 6. Activate the `spconv` environment: `conda activate spconv`
-7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variable `PATH` so that the nvcc-compiler in the Conda environment's
-`pkgs/cuda-toolkit/bin` path is found. 
+7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variablew `PATH` and `LIBRARY_PATH` so that the nvcc-compiler in the Conda environment's
+`pkgs/cuda-toolkit/bin` and `pkgs/cuda-toolkit/lib64` paths are found. 
 
 Linux/Unix:
 ```bash
-export PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH
-export CUDA_PATH=$CONDA_PREFIX
-export CUDA_HOME=$CONDA_PREFIX
+export "PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH"
+export "CUDA_PATH=$CONDA_PREFIX"
+export "CUDA_HOME=$CONDA_PREFIX"
 which nvcc # Check that the correct nvcc-compiler is found
+export "LIBRARY_PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/lib64:$LIBRARY_PATH"
 ```
 
+8. 
 8. Build the package: `python setup.py bdist_wheel`
 9. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 
