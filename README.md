@@ -28,7 +28,7 @@ which nvcc # Check that the correct nvcc-compiler is found
 ```
 
 Windows PowerShell:
-Download cuda [here](https://developer.nvidia.com/cuda-12-4-0-download-archive), boost [here](https://www.boost.org/users/download/) and pytorch here.
+Download cuda [here](https://developer.nvidia.com/cuda-12-4-0-download-archive), boost [here](https://www.boost.org/users/download/) and pytorch [here](https://pytorch.org/get-started/locally/). At the moment of the pytorch version is 2.4.1 you might need to look in the archive.
 8. Build the package: `python setup.py bdist_wheel`
 9. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 
