@@ -27,7 +27,7 @@ import sys
 if sys.platform == "linux" or sys.platform == "linux2":
     _LIB_PATH = str(Path(__file__).parent / "lib" / "libspconv.so")
 else :
-    _LIB_PATH = str(Path(__file__).parent.parent / "build" / "temp.win-amd64-cpython-310" / "Release" / "src" / "spconv" / "Release" / "spconv.dll")
+    _LIB_PATH = str(Path(__file__).parent / "lib" / "spconv.dll")
 torch.ops.load_library(_LIB_PATH)
 
 def scatter_nd(indices, updates, shape):
