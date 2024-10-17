@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from pathlib import Path
-
+import sys
 import numpy as np
 import torch
 #from spconv import utils
@@ -23,7 +23,11 @@ from spconv.conv import SparseInverseConv2d, SparseInverseConv3d
 from spconv.modules import SparseModule, SparseSequential
 from spconv.pool import SparseMaxPool2d, SparseMaxPool3d
 
-_LIB_PATH = str(Path(__file__).parent / "lib" / "libspconv.so")
+if sys.platform == "linux" or sys.platform == "linux2":
+    _LIB_PATH = str(Path(__file__).parent / "lib" / "libspconv.so")
+else :
+    _LIB_PATH = str(Path(__file__).parent / "lib" / "spconv.dll")
+
 torch.ops.load_library(_LIB_PATH)
 
 def scatter_nd(indices, updates, shape):
