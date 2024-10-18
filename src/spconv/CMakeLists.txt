@@ -22,4 +22,29 @@ target_link_libraries(spconv
 
 set_target_properties(spconv PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 
+target_sources(spconv PRIVATE
+    all.cc
+    indice.cc
+    indice.cu
+    maxpool.cc
+    maxpool.cu
+    reordering.cc
+    reordering.cu
+    ${PROJECT_SOURCE_DIR}/include/spconv/reordering.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/reordering.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/reordering.cu.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/pool_ops.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/spconv_ops.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/geometry.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/indice.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/indice.cu.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/mp_helper.h
+    ${PROJECT_SOURCE_DIR}/include/spconv/maxpool.h
+    ${PROJECT_SOURCE_DIR}/include/tensorview/tensorview.h
+    ${PROJECT_SOURCE_DIR}/include/tensorview/helper_launch.h
+    ${PROJECT_SOURCE_DIR}/include/tensorview/helper_kernel.cu.h
+    ${PROJECT_SOURCE_DIR}/include/tensorview/helper_launch.h
+    ${PROJECT_SOURCE_DIR}/include/tensorview/tensorview.h
+)
+
 install(TARGETS spconv DESTINATION lib)

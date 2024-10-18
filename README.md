@@ -11,16 +11,25 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
 ## Build Locally
 
 1. Install Nvidia GPU driver that supports CUDA 11.7 or later
-2. Create `spconv` Conda environment using these [instructions](conda/README.md)
-3. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
-4. Install a C++14 (or higher) compatible compiler. In Ubuntu you can install `build-essential` package
-5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`
+2. In Windows you need to install CUDA 11.7 and modify the environment variable so that this CUDA version is chosen
+    1. `CUDA_PATH` needs to point to `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7`
+    2. `CUDA_PATH_V11_7` needs to point to `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.7`
+3. Create `spconv` Conda environment using these [instructions](conda/README.md)
+    1. In Windows use the [./conda/spconv-windows.yml](./conda/spconv-windows.yml) when creating the environment
+    2. In Ubuntu use the [./conda/spconv-linux.yml](./conda/spconv-linux.yml) when creating the environment
+4. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
+5. Install a C++14 (or higher) compatible compiler. 
+    1. In Ubuntu you can install `build-essential` package
+    2. In Windows you need to install Visual Studio version that is compatible with CUDA 11.7
 6. Activate the `spconv` environment: `conda activate spconv`
-7. After having activated the `spconv` environment, you have to modify the environment variable `PATH` so that the nvcc-compiler in the Conda environment's
+7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variable `PATH` so that the nvcc-compiler in the Conda environment's
 `pkgs/cuda-toolkit/bin` path is found. 
 
+Linux/Unix:
 ```bash
 export PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH
+export CUDA_PATH=$CONDA_PREFIX
+export CUDA_HOME=$CONDA_PREFIX
 which nvcc # Check that the correct nvcc-compiler is found
 ```
 

@@ -8,6 +8,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Set CUDA architectures
 set(CMAKE_CUDA_ARCHITECTURES "52;60;61;70;75" CACHE STRING "Supported CUDA architectures" FORCE)
 
+# Append the -allow-unsupported-compiler flag to the CUDA flags
+if (CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -allow-unsupported-compiler")
+endif()
+
 # The reason this needs to be set, take a look at https://stackoverflow.com/questions/62693218/how-to-solve-gtest-and-libtorch-linkage-conflict
 # If this is not used, GTest linking fails if linking against PyTorch
 add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
@@ -20,15 +25,32 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Include the FetchContent module
 include(FetchContent)
 
+# If a Conda environment is enabled, we look for the CUDA toolkit in that environment
+if(DEFINED ENV{CONDA_PREFIX})
+    message(STATUS "CONDA environment detected, path: $ENV{CONDA_PREFIX}")
+    set(CUDAToolkit_ROOT "$ENV{CONDA_PREFIX}" CACHE PATH "Path to CUDA toolkit")
+    set(CUDA_TOOLKIT_ROOT_DIR $ENV{CONDA_PREFIX} CACHE PATH "CUDA Toolkit directory path (used by older/other find_package implementations)")
+    # Some Caffe2 find-package(s) need these if we want to find cudnn in Windows
+    set(CUDNN_LIBRARY "$ENV{CONDA_PREFIX};$ENV{CONDA_PREFIX}/Library" CACHE PATH "CUDNN directory path (used by some Caffe2 find-packages)")
+    set(CUDNN_INCLUDE_DIR "$ENV{CONDA_PREFIX};$ENV{CONDA_PREFIX}/Library" CACHE PATH "CUDNN directory path (used by some Caffe2 find-packages)")
+    set(NVTOOLEXT_HOME $ENV{CONDA_PREFIX} CACHE PATH "Some pre-built PyTorch versions require this")
+    # Boost should be installed in the environment
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{CONDA_PREFIX}/Library/lib/cmake/Boost-1.85.0")
+endif()
+
+find_package(CUDAToolkit)
+
 # Boost support
-include(cmake/Boost.cmake)
+#include(cmake/Boost.cmake)
+
+find_package(Boost CONFIG)
 
 # Fetch GTest
  FetchContent_Declare(
    googletest
    GIT_REPOSITORY https://github.com/google/googletest.git
    GIT_TAG v1.14.0
- )
+)
 
 # Fetch pybind11
 FetchContent_Declare(

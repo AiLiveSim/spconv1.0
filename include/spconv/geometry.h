@@ -188,7 +188,13 @@ namespace spconv
       kernelVolume *= kernelSize[i];
     }
     Index numValidPoints = 0;
+//TODO: Visual C++ does not support VLA (Variable Sized Arrays), so we use _malloca to allocate memory
+// on the stack. This has not been tested yet.
+#ifdef _MSC_VER
+    Index* validPoints = (Index*)_malloca(kernelVolume * (NDim + 1) * sizeof(Index));
+#else
     Index validPoints[kernelVolume * (NDim + 1)];
+#endif
     Index *pointPtr = nullptr;
     for (int j = 0; j < numActIn; ++j)
     {
@@ -216,6 +222,9 @@ namespace spconv
         indicePairs(offset, 1, indiceNum[offset]++) = gridsOut[index];
       }
     }
+#ifdef _MSC_VER
+    _freea(validPoints);
+#endif
     return numAct;
   }
 
@@ -245,7 +254,13 @@ namespace spconv
       kernelVolume *= kernelSize[i];
     }
     Index numValidPoints = 0;
+//TODO: Visual C++ does not support VLA (Variable Sized Arrays), so we use _malloca to allocate memory
+// on the stack. This has not been tested yet.
+#ifdef _MSC_VER
+    Index* validPoints = (Index*)_malloca(kernelVolume * (NDim + 1) * sizeof(Index));
+#else
     Index validPoints[kernelVolume * (NDim + 1)];
+#endif
     Index *pointPtr = nullptr;
     for (int j = 0; j < numActIn; ++j)
     {
@@ -273,6 +288,9 @@ namespace spconv
         indicePairs(offset, 1, indiceNum[offset]++) = gridsOut[index];
       }
     }
+#ifdef _MSC_VER
+    _freea(validPoints);
+#endif
     return numAct;
   }
 
@@ -301,7 +319,13 @@ namespace spconv
       kernelVolume *= kernelSize[i];
     }
     Index numValidPoints = 0;
+//TODO: Visual C++ does not support VLA (Variable Sized Arrays), so we use _malloca to allocate memory
+// on the stack. This has not been tested yet.
+#ifdef _MSC_VER
+    Index* validPoints = (Index*)_malloca(kernelVolume * (NDim + 1) * sizeof(Index));
+#else
     Index validPoints[kernelVolume * (NDim + 1)];
+#endif
     Index *pointPtr = nullptr;
     Index index = 0;
     for (int j = 0; j < numActIn; ++j)
@@ -316,6 +340,7 @@ namespace spconv
       numValidPoints = getValidOutPos<Index, NDim>(
           indicesIn.data() + j * (NDim + 1) + 1, kernelSize, stride, padding,
           dilation, outSpatialShape, validPoints);
+
       for (Index i = 0; i < numValidPoints; ++i)
       {
         pointPtr = validPoints + i * (NDim + 1);
@@ -329,6 +354,9 @@ namespace spconv
         }
       }
     }
+#ifdef _MSC_VER
+    _freea(validPoints);
+#endif
     return numActIn;
   }
 

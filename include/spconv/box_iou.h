@@ -36,9 +36,9 @@ namespace spconv
   }
 
   template <typename DType>
-  inline py::array_t<DType> zeros(std::vector<long int> shape)
+  inline py::array_t<DType> zeros(std::vector<pybind11::ssize_t> shape)
   {
-    return constant<DType, std::vector<long int>>(shape, 0);
+    return constant<DType, std::vector<pybind11::ssize_t>>(shape, 0);
   }
 
   template <typename DType>

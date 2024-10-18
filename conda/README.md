@@ -21,9 +21,12 @@ conda config --set solver libmamba
 
 Following YAML configuration files for Conda environments are available:
 
-* [spconv.yml](./spconv.yml)
+* [spconv-linux.yml](./spconv-linux.yml)
   * **Environment name:** spconv
-  * **Contains:** torch, pytorch-cuda, cudatoolkit-dev, cudnn
+  * **Contains:** torch, pytorch-cuda, cudatoolkit-dev, cudnn, mkl
+* [spconv-windows.yml](./spconv-windows.yml)
+  * **Environment name:** spconv
+  * **Contains:** torch, pytorch-cuda, cudatoolkit-dev, cudnn, mkl, mkl-static
 
 You can create a new virtual environment as follows:
 

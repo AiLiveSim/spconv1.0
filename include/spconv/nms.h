@@ -35,7 +35,7 @@ std::vector<int> non_max_suppression_cpu(py::array_t<DType> boxes,
   auto ndets = boxes.shape(0);
   auto boxes_r = boxes.template unchecked<2>();
   auto order_r = order.template unchecked<1>();
-  auto suppressed = zeros<int>({ndets});
+  auto suppressed = zeros<pybind11::ssize_t>({ndets});
   auto suppressed_rw = suppressed.template mutable_unchecked<1>();
   auto area = zeros<DType>({ndets});
   auto area_rw = area.template mutable_unchecked<1>();
