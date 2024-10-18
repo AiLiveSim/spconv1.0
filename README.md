@@ -18,6 +18,10 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
     1. In Windows use the [./conda/spconv-windows.yml](./conda/spconv-windows.yml) when creating the environment
     2. In Ubuntu use the [./conda/spconv-linux.yml](./conda/spconv-linux.yml) when creating the environment
 4. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
+To install cmake from cuda environment:
+```bash
+conda install cmake
+```
 5. Install a C++14 (or higher) compatible compiler. It must be compatible with the installed CUDA version (some [compatibilities](https://gist.github.com/ax3l/9489132)).
     1. In Ubuntu you can install `build-essential` package<br>
     If a specific version of g++ and gcc is needed, follow this instructions for a Linux based system (from [stackoverflow](https://askubuntu.com/questions/26498/how-to-choose-the-default-gcc-and-g-version)).
@@ -44,24 +48,29 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
     sudo update-alternatives --config g++
     ```
     2. In Windows you need to install Visual Studio version that is compatible with CUDA 11.7
-5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`.
-In ubuntu:
-```
-sudo apt-get install libboost-all-dev
-```
 6. Activate the `spconv` environment: `conda activate spconv`
-7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variables `PATH`, and set the `CUDA_PATH` and `CUDA_HOME` the nvcc-compiler, the cuda headers and libraries in the Conda environment's paths are found. 
+7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variables `PATH` and `CPATH`, and set the `CUDA_PATH` and `CUDA_HOME` the nvcc-compiler, the cuda headers and libraries in the Conda environment's paths are found. 
 
-Linux/Unix:
-```bash
-export "PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH"
-export "CUDA_PATH=$CONDA_PREFIX"
-export "CUDA_HOME=$CONDA_PREFIX"
-which nvcc # Check that the correct nvcc-compiler is found
-```
-
-8. Build the package: `python setup.py bdist_wheel`
-9. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
+    Linux/Unix:
+    ```bash
+    export "PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH"
+    export "CPATH=$CONDA_PREFIX/include"
+    export "CUDA_PATH=$CONDA_PREFIX"
+    export "CUDA_HOME=$CONDA_PREFIX"
+    which nvcc # Check that the correct nvcc-compiler is found
+    ```
+8. `Boost` will be loaded from the conda environment if found exactly here `$ENV{CONDA_PREFIX}/Library/lib/cmake/Boost-1.85.0`.<br>
+If not found, cmake will try to find an installed version through environment variable paths. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`.<br>
+With conda:
+    ```bash
+    conda install boost
+    ```
+    On ubuntu system:
+    ```bash
+    sudo apt-get install libboost-all-dev
+    ```
+9. Build the package: `python setup.py bdist_wheel`
+10. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
 
 ## Compare with SparseConvNet
 
