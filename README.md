@@ -47,10 +47,10 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
 5. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`.
 In ubuntu:
 ```
-sudo apt-get install boost
+sudo apt-get install libboost-all-dev
 ```
 6. Activate the `spconv` environment: `conda activate spconv`
-7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variables `PATH`, `LIBRARY_PATH` and `CPATH` so that the nvcc-compiler, the cuda headers and libraries in the Conda environment's paths are found. 
+7. After having activated the `spconv` environment, if building the package in Ubuntu, you have to modify the environment variables `PATH`, and set the `CUDA_PATH` and `CUDA_HOME` the nvcc-compiler, the cuda headers and libraries in the Conda environment's paths are found. 
 
 Linux/Unix:
 ```bash
@@ -58,8 +58,6 @@ export "PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/bin:$PATH"
 export "CUDA_PATH=$CONDA_PREFIX"
 export "CUDA_HOME=$CONDA_PREFIX"
 which nvcc # Check that the correct nvcc-compiler is found
-export "LIBRARY_PATH=$CONDA_PREFIX/pkgs/cuda-toolkit/lib64:$LIBRARY_PATH"
-export "CPATH=$CONDA_PREFIX/pkgs/cuda-toolkit/include:$CPATH"
 ```
 
 8. Build the package: `python setup.py bdist_wheel`
