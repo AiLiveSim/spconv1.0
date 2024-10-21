@@ -19,9 +19,9 @@ The GPU Indice Generation algorithm is a unofficial implementation of paper [SEC
     2. In Ubuntu use the [./conda/spconv-linux.yml](./conda/spconv-linux.yml) when creating the environment
 4. Install [CMake](https://apt.kitware.com/) and [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) (used by CMake to fetch content)
 To install cmake from cuda environment:
-```bash
-conda install cmake
-```
+    ```bash
+    conda install cmake
+    ```
 5. Install a C++14 (or higher) compatible compiler. It must be compatible with the installed CUDA version (some [compatibilities](https://gist.github.com/ax3l/9489132)).
     1. In Ubuntu you can install `build-essential` package<br>
     If a specific version of g++ and gcc is needed, follow this instructions for a Linux based system (from [stackoverflow](https://askubuntu.com/questions/26498/how-to-choose-the-default-gcc-and-g-version)).
@@ -59,15 +59,13 @@ conda install cmake
     export "CUDA_HOME=$CONDA_PREFIX"
     which nvcc # Check that the correct nvcc-compiler is found
     ```
-8. `Boost` will be loaded from the conda environment if found exactly here `$ENV{CONDA_PREFIX}/Library/lib/cmake/Boost-1.85.0`.<br>
-If not found, cmake will try to find an installed version through environment variable paths. If `Boost` is not found in the system, CMake tries to fetch a header only version. If this fails, you need to install `Boost`.<br>
-With conda:
-    ```bash
-    conda install boost
-    ```
-    On ubuntu system:
+8. If Conda environment has been activated, CMake will search for Boost in the directory `$ENV{CONDA_PREFIX}/Library/lib/cmake/Boost-1.85.0`. CMake searches for Boost using CONFIG mode as per this documentation [FindBoost](https://cmake.org/cmake/help/latest/module/FindBoost.html). If you are building spconv1.0 outside of a Conda environment, in Ubuntu you can install Boost as follows:
     ```bash
     sudo apt-get install libboost-all-dev
+    ```
+    Or using Conda
+    ```bash
+    conda install boost
     ```
 9. Build the package: `python setup.py bdist_wheel`
 10. Install the package: `pip install ./dist/spconv-1.0-cp310-cp310-linux_x86_64.whl`
