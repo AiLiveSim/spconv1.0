@@ -34,10 +34,9 @@ namespace spconv
     auto options =
         torch::TensorOptions().dtype(features.dtype()).device(features.device());
     torch::Tensor output = torch::zeros({numAct, numInPlanes}, options);
-    double totalTime = 0;
     for (int i = 0; i < kernelVolume; ++i)
     {
-      auto nHot = indicePairNumCpu.data<int>()[i];
+      auto nHot = indicePairNumCpu.data_ptr<int>()[i];
       if (nHot <= 0)
       {
         continue;
@@ -46,14 +45,15 @@ namespace spconv
       if (device == torch::kCPU)
       {
         functor::SparseMaxPoolForwardFunctor<tv::CPU, T, int> forwardFtor;
-        forwardFtor(tv::CPU(), tv::torch2tv<T>(output),
+        forwardFtor(tv::torch2tv<T>(output),
                     tv::torch2tv<const T>(features),
                     tv::torch2tv<const int>(indicePairs).subview(i), nHot);
       }
       else
       {
         functor::SparseMaxPoolForwardFunctor<tv::GPU, T, int> forwardFtor;
-        forwardFtor(tv::TorchGPU(), tv::torch2tv<T>(output),
+        forwardFtor(tv::TorchGPU(),
+                    tv::torch2tv<T>(output),
                     tv::torch2tv<const T>(features),
                     tv::torch2tv<const int>(indicePairs).subview(i), nHot);
         TV_CHECK_CUDA_ERR();
@@ -71,7 +71,6 @@ namespace spconv
                                       torch::Tensor indiceNum)
   {
     auto device = features.device().type();
-    auto numInPlanes = features.size(1);
     auto indicePairNumCpu = indiceNum.to({torch::kCPU});
     auto options =
         torch::TensorOptions().dtype(features.dtype()).device(features.device());
@@ -79,7 +78,7 @@ namespace spconv
     auto kernelVolume = indicePairs.size(0);
     for (int i = 0; i < kernelVolume; ++i)
     {
-      auto nHot = indicePairNumCpu.data<int>()[i];
+      auto nHot = indicePairNumCpu.data_ptr<int>()[i];
       if (nHot <= 0)
       {
         continue;
@@ -87,7 +86,7 @@ namespace spconv
       if (device == torch::kCPU)
       {
         functor::SparseMaxPoolBackwardFunctor<tv::CPU, T, int> backwardFtor;
-        backwardFtor(tv::CPU(), tv::torch2tv<const T>(outFeatures),
+        backwardFtor(tv::torch2tv<const T>(outFeatures),
                      tv::torch2tv<const T>(features),
                      tv::torch2tv<const T>(outGrad), tv::torch2tv<T>(inputGrad),
                      tv::torch2tv<const int>(indicePairs).subview(i), nHot);
@@ -95,7 +94,8 @@ namespace spconv
       else
       {
         functor::SparseMaxPoolBackwardFunctor<tv::GPU, T, int> backwardFtor;
-        backwardFtor(tv::TorchGPU(), tv::torch2tv<const T>(outFeatures),
+        backwardFtor(tv::TorchGPU(),
+                     tv::torch2tv<const T>(outFeatures),
                      tv::torch2tv<const T>(features),
                      tv::torch2tv<const T>(outGrad), tv::torch2tv<T>(inputGrad),
                      tv::torch2tv<const int>(indicePairs).subview(i), nHot);

@@ -28,123 +28,94 @@ namespace spconv
 {
   namespace functor
   {
-    template <typename T, typename Index>
-    struct SparseGatherFunctor<tv::GPU, T, Index>
-    {
-      using vecload_type_t =
-          std::conditional_t<std::is_same<T, at::Half>::value, int2, int4>;
-      using kernel_block_t = mp_list_c<int, 64, 32, 16>;
-      void operator()(const tv::GPU &d, tv::TensorView<T> buffer,
-                      tv::TensorView<const T> features,
-                      tv::TensorView<const Index> indices, int size)
-      {
-        if (size <= 0)
+  template <typename T, typename Index>
+  void SparseGatherFunctor<tv::GPU, T, Index>::operator()(const tv::GPU &d, tv::TensorView<T> buffer,
+                                                          tv::TensorView<const T> features,
+                                                          tv::TensorView<const Index> indices, int size)
+  {
+      if (size <= 0)
           return;
-        int numPlanes = features.dim(1);
-        bool notFound = true;
-        constexpr int vecloadFactor = sizeof(vecload_type_t) / sizeof(T);
-        mp_for_each<kernel_block_t>([=, &buffer, &features, &indices,
-                                     &notFound](auto NumTLP)
-                                    {
-      constexpr int NumILP = NumTLP / 4;
-      // constexpr int NumILP = NumTLP / (64 / (NumTLP / vecloadFactor));
-      int nHotBlock = (size / NumTLP) * NumTLP;
+
+      int numPlanes = features.dim(1);
+      bool notFound = true;
+      constexpr int vecloadFactor = sizeof(vecload_type_t) / sizeof(T);
+
+      mp_for_each<kernel_block_t>([=, &buffer, &features, &indices, &notFound](auto NumTLP)
+                                  {
+                                      constexpr int NumILP = NumTLP / 4;
+                                      int nHotBlock = (size / NumTLP) * NumTLP;
+
+                                      if (notFound) {
+                                          if (numPlanes % NumTLP == 0) {
+                                              if (nHotBlock >= NumTLP) {
+                                                  gatherVecBlockKernel<T, Index, int(NumTLP), NumILP, vecload_type_t>
+                                                      <<<dim3(numPlanes / NumTLP, size / NumTLP),
+                                                         dim3(NumTLP / vecloadFactor, NumTLP / NumILP), 0, d.stream()>>>(buffer.data(),
+                                                                                                                         features.data(), indices.data(), nHotBlock, numPlanes / vecloadFactor);
+
+                                                  TV_CHECK_CUDA_ERR();
+                                              }
+                                              if (size - nHotBlock > 0) {
+                                                  gatherVecKernel<T, Index, int(NumTLP), NumILP, vecload_type_t>
+                                                      <<<dim3(1, numPlanes / NumTLP),
+                                                         dim3(NumTLP / NumILP, NumTLP / vecloadFactor), 0, d.stream()>>>(buffer.data() + nHotBlock * numPlanes,
+                                                                                                                         features.data(), indices.data() + nHotBlock, size - nHotBlock, numPlanes / vecloadFactor);
+                                                  TV_CHECK_CUDA_ERR();
+                                              }
+                                              notFound = false;
+                                          }
+                                      }
+                                  });
+
       if (notFound) {
-        if (numPlanes % NumTLP == 0) {
-          if (nHotBlock >= NumTLP) {
-            gatherVecBlockKernel<T, Index, int(NumTLP), NumILP, vecload_type_t>
-                <<<dim3(numPlanes / NumTLP, size / NumTLP),
-                   dim3(NumTLP / vecloadFactor, NumTLP / NumILP), 0,
-                   d.stream()>>>(buffer.data(), features.data(), indices.data(),
-                                 nHotBlock, numPlanes / vecloadFactor);
-
-            TV_CHECK_CUDA_ERR();
-          }
-          if (size - nHotBlock > 0) {
-            gatherVecKernel<T, Index, int(NumTLP), NumILP, vecload_type_t>
-                <<<dim3(1, numPlanes / NumTLP),
-                   dim3(NumTLP / NumILP, NumTLP / vecloadFactor), 0,
-                   d.stream()>>>(buffer.data() + nHotBlock * numPlanes,
-                                 features.data(), indices.data() + nHotBlock,
-                                 size - nHotBlock, numPlanes / vecloadFactor);
-            TV_CHECK_CUDA_ERR();
-          }
-          notFound = false;
-        }
-      } });
-
-        if (notFound)
-        {
           constexpr int NumTLP = 64;
           constexpr int NumILP = NumTLP / 4;
           gatherGenericKernel<T, Index, NumTLP, NumILP>
-              <<<dim3(tv::launch::DivUp(size, NumTLP),
-                      tv::launch::DivUp(numPlanes, NumTLP)),
+              <<<dim3(tv::launch::DivUp(size, NumTLP), tv::launch::DivUp(numPlanes, NumTLP)),
                  dim3(NumTLP / NumILP, NumTLP), 0, d.stream()>>>(
                   buffer.data(), features.data(), indices.data(), size, numPlanes);
           TV_CHECK_CUDA_ERR();
-        }
       }
-    };
+  }
+
     template <typename T, typename Index>
-    struct SparseScatterAddFunctor<tv::GPU, T, Index>
-    {
-      using vecload_type_t =
-          std::conditional_t<std::is_same<T, at::Half>::value, int2, int4>;
-      using kernel_block_t = mp_list_c<int, 64, 32, 16>;
-      void operator()(const tv::GPU &d, tv::TensorView<T> outFeatures,
+      void SparseScatterAddFunctor<tv::GPU, T, Index>::operator()(const tv::GPU &d, tv::TensorView<T> outFeatures,
                       tv::TensorView<const T> buffer,
-                      tv::TensorView<const Index> indices, int size, bool stable)
-      {
-        if (size <= 0)
-          return;
+                      tv::TensorView<const Index> indices, int size) {
+        if (size <= 0) return;
         int numPlanes = outFeatures.dim(1);
         bool notFound = true;
-        constexpr int vecloadFactor =
-            sizeof(vecload_type_t) / sizeof(T); // important for half.
-        mp_for_each<kernel_block_t>([=, &d, &outFeatures, &buffer, &indices,
-                                     &notFound](auto NumTLP)
-                                    {
-      // constexpr int NumILP = NumTLP / (64 / (NumTLP / vecloadFactor));
-      constexpr int NumILP = NumTLP / 4;
-      int nHotBlock = (size / NumTLP) * NumTLP;
-      if (notFound) {
-        if (numPlanes % NumTLP == 0) {
-          if (nHotBlock >= NumTLP) {
-            scatterAddVecBlockKernel<T, Index, int(NumTLP), NumILP,
-                                     vecload_type_t>
-                <<<dim3(numPlanes / NumTLP, size / NumTLP),
-                   dim3(NumTLP / vecloadFactor, NumTLP / NumILP), 0,
-                   d.stream()>>>(outFeatures.data(), buffer.data(),
-                                 indices.data(), nHotBlock,
-                                 numPlanes / vecloadFactor);
+        constexpr int vecloadFactor = sizeof(vecload_type_t) / sizeof(T);  // important for half.
+        mp_for_each<kernel_block_t>([=, &d, &outFeatures, &buffer, &indices, &notFound](auto NumTLP) {
+            // constexpr int NumILP = NumTLP / (64 / (NumTLP / vecloadFactor));
+            constexpr int NumILP = NumTLP / 4;
+            int nHotBlock = (size / NumTLP) * NumTLP;
+            if (notFound) {
+                if (numPlanes % NumTLP == 0) {
+                    if (nHotBlock >= NumTLP) {
+                        scatterAddVecBlockKernel<T, Index, int(NumTLP), NumILP, vecload_type_t>
+                            <<<dim3(numPlanes / NumTLP, size / NumTLP), dim3(NumTLP / vecloadFactor, NumTLP / NumILP), 0, d.stream()>>>(
+                                outFeatures.data(), buffer.data(), indices.data(), nHotBlock, numPlanes / vecloadFactor);
+                        TV_CHECK_CUDA_ERR();
+                    }
+                    if (size - nHotBlock > 0) {
+                        scatterAddGenericKernel<T, Index, int(NumTLP), NumILP><<<dim3(1, numPlanes / NumTLP), dim3(NumTLP / NumILP, NumTLP), 0, d.stream()>>>(
+                            outFeatures.data(), buffer.data() + nHotBlock * numPlanes, indices.data() + nHotBlock, size - nHotBlock, numPlanes);
+                        TV_CHECK_CUDA_ERR();
+                    }
+                    notFound = false;
+                }
+            }
+        });
+        if (notFound) {
+            constexpr int NumTLP = 64;
+            constexpr int NumILP = NumTLP / 4;
+            scatterAddGenericKernel<T, Index, NumTLP, NumILP>
+                <<<dim3(tv::launch::DivUp(size, NumTLP), tv::launch::DivUp(numPlanes, NumTLP)), dim3(NumTLP / NumILP, NumTLP), 0, d.stream()>>>(outFeatures.data(), buffer.data(),
+                                                                                                                                                indices.data(), size, numPlanes);
             TV_CHECK_CUDA_ERR();
-          }
-          if (size - nHotBlock > 0) {
-            scatterAddGenericKernel<T, Index, int(NumTLP), NumILP>
-                <<<dim3(1, numPlanes / NumTLP), dim3(NumTLP / NumILP, NumTLP),
-                   0, d.stream()>>>(
-                    outFeatures.data(), buffer.data() + nHotBlock * numPlanes,
-                    indices.data() + nHotBlock, size - nHotBlock, numPlanes);
-            TV_CHECK_CUDA_ERR();
-          }
-          notFound = false;
         }
-      } });
-        if (notFound)
-        {
-          constexpr int NumTLP = 64;
-          constexpr int NumILP = NumTLP / 4;
-          scatterAddGenericKernel<T, Index, NumTLP, NumILP>
-              <<<dim3(tv::launch::DivUp(size, NumTLP),
-                      tv::launch::DivUp(numPlanes, NumTLP)),
-                 dim3(NumTLP / NumILP, NumTLP), 0, d.stream()>>>(
-                  outFeatures.data(), buffer.data(), indices.data(), size,
-                  numPlanes);
-          TV_CHECK_CUDA_ERR();
-        }
-      }
-    };
+    }
   } // namespace functor
 
 #define DECLARE_GPU_SPECS_T_INDEX(T, Index)                        \

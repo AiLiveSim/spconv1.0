@@ -19,43 +19,30 @@ namespace spconv
 {
   namespace functor
   {
-    template <typename T, typename Index>
-    struct SparseGatherFunctor<tv::CPU, T, Index>
-    {
-      void operator()(const tv::CPU &d, tv::TensorView<T> buffer, tv::TensorView<const T> features,
-                      tv::TensorView<const Index> indices, int size)
-      {
+    template <typename Device, typename T, typename Index>
+      void SparseGatherFunctor<Device, T, Index>::operator()(tv::TensorView<T> buffer, tv::TensorView<const T> features,
+                      tv::TensorView<const Index> indices, int size) {
         int numPlanes = features.dim(1);
-        for (int i = 0; i < size; ++i)
-        {
-          std::memcpy(buffer.data() + i * numPlanes,
-                      features.data() + indices[i] * numPlanes,
-                      sizeof(T) * numPlanes);
+        for (int i = 0; i < size; ++i) {
+            std::memcpy(buffer.data() + i * numPlanes, features.data() + indices[i] * numPlanes, sizeof(T) * numPlanes);
         }
-      }
-    };
+    }
 
-    template <typename T, typename Index>
-    struct SparseScatterAddFunctor<tv::CPU, T, Index>
-    {
-      void operator()(const tv::CPU &d, tv::TensorView<T> outFeatures,
+    template <typename Device, typename T, typename Index>
+      void SparseScatterAddFunctor<Device, T, Index>::operator()(tv::TensorView<T> outFeatures,
                       tv::TensorView<const T> buffer, tv::TensorView<const Index> indices,
-                      int size, bool stable)
-      {
+                      int size) {
         int numPlanes = outFeatures.dim(1);
         const T *buf = buffer.data();
         T *out = outFeatures.data();
-        for (int i = 0; i < size; ++i)
-        {
-          buf = buffer.data() + i * numPlanes;
-          out = outFeatures.data() + indices[i] * numPlanes;
-          for (int j = 0; j < numPlanes; ++j)
-          {
-            out[j] += buf[j];
-          }
+        for (int i = 0; i < size; ++i) {
+            buf = buffer.data() + i * numPlanes;
+            out = outFeatures.data() + indices[i] * numPlanes;
+            for (int j = 0; j < numPlanes; ++j) {
+                out[j] += buf[j];
+            }
         }
-      }
-    };
+    }
 
   } // namespace functor
 

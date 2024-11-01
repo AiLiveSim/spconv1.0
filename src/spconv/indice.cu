@@ -28,9 +28,7 @@ namespace spconv
   namespace functor
   {
     template <typename Index, typename IndexGrid, unsigned NDim>
-    struct CreateConvIndicePairFunctorP1<tv::GPU, Index, IndexGrid, NDim>
-    {
-      Index operator()(const tv::GPU &d, tv::TensorView<const Index> indicesIn,
+      Index CreateConvIndicePairFunctorP1<tv::GPU, Index, IndexGrid, NDim>::operator()(const tv::GPU &d, tv::TensorView<const Index> indicesIn,
                        tv::TensorView<Index> indicesOut,
                        tv::TensorView<IndexGrid> gridsOut,
                        tv::TensorView<Index> indicePairs,
@@ -41,108 +39,77 @@ namespace spconv
                        const tv::SimpleVector<Index, NDim> padding,
                        const tv::SimpleVector<Index, NDim> dilation,
                        const tv::SimpleVector<Index, NDim> outSpatialShape,
-                       bool transpose)
-      {
+                       bool transpose) {
         Index batchSize = gridsOut.dim(0);
         auto numActIn = indicesIn.dim(0);
-        if (numActIn == 0)
-          return 0;
+        if (numActIn == 0) return 0;
         // auto timer = spconv::CudaContextTimer<>();
         if (transpose)
-          prepareDeConvIndicePairsKernel<Index, IndexGrid, NDim, 256>
-              <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0,
-                 d.stream()>>>(indicesIn, indicesOut, gridsOut, indicePairs,
-                               indiceNum, indicePairUnique, kernelSize, stride,
-                               padding, dilation, outSpatialShape);
+            prepareDeConvIndicePairsKernel<Index, IndexGrid, NDim, 256><<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(
+                indicesIn, indicesOut, gridsOut, indicePairs, indiceNum, indicePairUnique, kernelSize, stride, padding, dilation, outSpatialShape);
         else
-          prepareIndicePairsKernel<Index, IndexGrid, NDim, 256>
-              <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0,
-                 d.stream()>>>(indicesIn, indicesOut, gridsOut, indicePairs,
-                               indiceNum, indicePairUnique, kernelSize, stride,
-                               padding, dilation, outSpatialShape);
+            prepareIndicePairsKernel<Index, IndexGrid, NDim, 256><<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(
+                indicesIn, indicesOut, gridsOut, indicePairs, indiceNum, indicePairUnique, kernelSize, stride, padding, dilation, outSpatialShape);
         TV_CHECK_CUDA_ERR();
         // std::cout << "p1 gene time " << timer.report() / 1000.0 << std::endl;
         return 1;
-      }
-    };
+    }
 
     template <typename Index, typename IndexGrid, unsigned NDim>
-    struct CreateConvIndicePairFunctorP2<tv::GPU, Index, IndexGrid, NDim>
-    {
-      Index operator()(const tv::GPU &d, tv::TensorView<const Index> indicesIn,
+      Index CreateConvIndicePairFunctorP2<tv::GPU, Index, IndexGrid, NDim>::operator()(const tv::GPU &d, tv::TensorView<const Index> indicesIn,
                        tv::TensorView<Index> indicesOut,
                        tv::TensorView<IndexGrid> gridsOut,
                        tv::TensorView<Index> indicePairs,
-                       tv::TensorView<Index> indiceNum,
                        tv::TensorView<Index> indicePairUnique,
                        const tv::SimpleVector<Index, NDim> outSpatialShape,
-                       bool transpose, bool resetGrid)
-      {
+                       bool resetGrid) {
         Index batchSize = gridsOut.dim(0);
         auto kernelVolume = indicePairs.dim(0);
         auto numActIn = indicesIn.dim(0);
-        if (numActIn == 0)
-          return 0;
+        if (numActIn == 0) return 0;
         Index numAct = indicePairUnique.dim(0) - 1;
-        assignGridAndIndiceOutKernel<Index, IndexGrid, NDim>
-            <<<tv::launch::getBlocks(numAct), tv::launch::CUDA_NUM_THREADS, 0,
-               d.stream()>>>(indicesOut, gridsOut, numAct, indicePairs,
-                             indicePairUnique, outSpatialShape, batchSize);
+        assignGridAndIndiceOutKernel<Index, IndexGrid, NDim><<<tv::launch::getBlocks(numAct), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(
+            indicesOut, gridsOut, numAct, indicePairs, indicePairUnique, outSpatialShape, batchSize);
         TV_CHECK_CUDA_ERR();
         assignIndicePairsKernel<Index, IndexGrid, NDim>
-            <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0,
-               d.stream()>>>(indicesOut, gridsOut, numActIn, indicePairs,
-                             indicePairUnique, outSpatialShape);
+            <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(indicesOut, gridsOut, numActIn, indicePairs, indicePairUnique, outSpatialShape);
         TV_CHECK_CUDA_ERR();
-        if (resetGrid)
-        {
-          resetGridKernel<Index, IndexGrid, NDim>
-              <<<tv::launch::getBlocks(numAct), tv::launch::CUDA_NUM_THREADS, 0,
-                 d.stream()>>>(indicePairUnique.data(), gridsOut, numAct);
-          TV_CHECK_CUDA_ERR();
+        if (resetGrid) {
+            resetGridKernel<Index, IndexGrid, NDim><<<tv::launch::getBlocks(numAct), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(indicePairUnique.data(), gridsOut, numAct);
+            TV_CHECK_CUDA_ERR();
         }
         return numAct;
-      }
-    };
+    }
 
     template <typename Index, typename IndexGrid, unsigned NDim>
-    struct CreateSubMIndicePairFunctor<tv::GPU, Index, IndexGrid, NDim>
-    {
-      Index operator()(const tv::GPU &d, tv::TensorView<const Index> indicesIn,
-                       tv::TensorView<IndexGrid> gridsOut,
-                       tv::TensorView<Index> indicePairs,
-                       tv::TensorView<Index> indiceNum,
-                       const tv::SimpleVector<Index, NDim> kernelSize,
-                       const tv::SimpleVector<Index, NDim> stride,
-                       const tv::SimpleVector<Index, NDim> padding,
-                       const tv::SimpleVector<Index, NDim> dilation,
-                       const tv::SimpleVector<Index, NDim> outSpatialShape,
-                       bool transpose, bool resetGrid)
-      {
+      Index CreateSubMIndicePairFunctor<tv::GPU, Index, IndexGrid, NDim>::operator()(
+        const tv::GPU &d,
+        tv::TensorView<const Index> indicesIn,
+        tv::TensorView<IndexGrid> gridsOut,
+        tv::TensorView<Index> indicePairs,
+        tv::TensorView<Index> indiceNum,
+        const tv::SimpleVector<Index, NDim> kernelSize,
+        const tv::SimpleVector<Index, NDim> stride,
+        const tv::SimpleVector<Index, NDim> padding,
+        const tv::SimpleVector<Index, NDim> dilation,
+        const tv::SimpleVector<Index, NDim> outSpatialShape,
+        bool resetGrid) {
         auto numActIn = indicesIn.dim(0);
-        if (numActIn == 0)
-          return 0;
+        if (numActIn == 0) return 0;
         // auto timer = spconv::CudaContextTimer<>();
-        prepareSubMGridKernel<Index, IndexGrid, NDim>
-            <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0,
-               d.stream()>>>(indicesIn, gridsOut, outSpatialShape);
+        prepareSubMGridKernel<Index, IndexGrid, NDim><<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(indicesIn, gridsOut, outSpatialShape);
         TV_CHECK_CUDA_ERR();
-        getSubMIndicePairsKernel<Index, IndexGrid, NDim>
-            <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0,
-               d.stream()>>>(indicesIn, gridsOut, indicePairs, indiceNum,
-                             kernelSize, stride, padding, dilation, outSpatialShape);
+        getSubMIndicePairsKernel<Index, IndexGrid, NDim><<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(
+            indicesIn, gridsOut, indicePairs, indiceNum, kernelSize, stride, padding, dilation, outSpatialShape);
         TV_CHECK_CUDA_ERR();
         // std::cout << "subm gene time " << timer.report() / 1000.0 << std::endl;
-        if (resetGrid)
-        {
-          resetGridSubMKernel<Index, IndexGrid, NDim>
-              <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0,
-                 d.stream()>>>(indicesIn.data(), gridsOut, outSpatialShape, numActIn);
-          TV_CHECK_CUDA_ERR();
+        if (resetGrid) {
+            resetGridSubMKernel<Index, IndexGrid, NDim>
+                <<<tv::launch::getBlocks(numActIn), tv::launch::CUDA_NUM_THREADS, 0, d.stream()>>>(indicesIn.data(), gridsOut, outSpatialShape, numActIn);
+            TV_CHECK_CUDA_ERR();
         }
         return numActIn;
-      }
-    };
+    }
   } // namespace functor
 
 #define DECLARE_GPU_SPECS_INDEX_NDIM(Index, NDIM)                             \

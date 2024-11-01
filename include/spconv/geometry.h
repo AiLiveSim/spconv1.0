@@ -38,7 +38,7 @@ namespace spconv
     Index m, offset;
     bool valid = false;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       lowers[i] = (input_pos[i] - (kernelSize[i] - 1) * dilation[i] - 1 +
                    stride[i] + padding[i]) /
@@ -54,7 +54,7 @@ namespace spconv
     }
 
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       counter[i] = 0;
     }
@@ -110,7 +110,7 @@ namespace spconv
     Index m, offset;
     bool valid = false;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       lowers[i] = input_pos[i] * stride[i] - padding[i];
       uppers[i] = lowers[i] + (kernelSize[i] - 1) * dilation[i];
@@ -122,7 +122,7 @@ namespace spconv
       numPoints *= counterSize[i];
     }
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       counter[i] = 0;
     }
@@ -177,13 +177,13 @@ namespace spconv
     Index batchIdx = 0;
     Index spatialVolume = 1;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       spatialVolume *= outSpatialShape[i];
     }
     Index kernelVolume = 1;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       kernelVolume *= kernelSize[i];
     }
@@ -243,13 +243,13 @@ namespace spconv
     Index batchIdx = 0;
     Index spatialVolume = 1;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       spatialVolume *= outSpatialShape[i];
     }
     Index kernelVolume = 1;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       kernelVolume *= kernelSize[i];
     }
@@ -303,18 +303,16 @@ namespace spconv
                            const Index *const stride, const Index *const padding,
                            const Index *dilation, const Index *const outSpatialShape)
   {
-    Index numAct = 0;
     auto numActIn = indicesIn.dim(0);
-    Index batchIdx = 0;
     Index spatialVolume = 1;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       spatialVolume *= outSpatialShape[i];
     }
     Index kernelVolume = 1;
 #pragma unroll
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       kernelVolume *= kernelSize[i];
     }
