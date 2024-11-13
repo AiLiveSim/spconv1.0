@@ -147,8 +147,8 @@ class SparseConvolution(SparseModule):
                 outids, _, indice_pairs, indice_pair_num, _ = datas
             else:
                 outids, indice_pairs, indice_pair_num = ops.get_indice_pairs(
-                    indices, batch_size, spatial_shape, self.kernel_size,
-                    self.stride, self.padding, self.dilation, self.output_padding, self.subm, self.transposed, grid=input.grid)
+                    indices=indices, batch_size=batch_size, spatial_shape=spatial_shape, ksize=self.kernel_size,
+                    stride=self.stride, padding=self.padding, dilation=self.dilation, out_padding=self.output_padding, subm=self.subm, transpose=self.transposed, grid=input.grid)
                 input.indice_dict[self.indice_key] = (outids, indices, indice_pairs, indice_pair_num, spatial_shape)
         if self.subm:
             out_features = Fsp.indice_subm_conv(features, self.weight,
