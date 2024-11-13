@@ -28,7 +28,7 @@ namespace spconv
   template <unsigned NDim>
   std::vector<torch::Tensor>
   getIndicePair(torch::Tensor indices, int64_t batchSize,
-                std::vector<int64_t> outSpatialShape, std::vector<int64_t> spatialShape,
+                std::vector<int64_t> outSpatialShape,
                 std::vector<int64_t> kernelSize, std::vector<int64_t> stride,
                 std::vector<int64_t> padding, std::vector<int64_t> dilation,
                 std::vector<int64_t> outPadding, int64_t _subM, int64_t _transpose)
@@ -37,7 +37,7 @@ namespace spconv
     bool subM = _subM != 0;
     bool transpose = _transpose != 0;
     auto numAct = indices.size(0);
-    auto coorDim = indices.size(1) - 1; // batchIdx + xyz
+    std::vector<int64_t>::size_type coorDim = indices.size(1) - 1; // batchIdx + xyz
     TV_ASSERT_RT_ERR(NDim == coorDim, "error");
     TV_ASSERT_RT_ERR(kernelSize.size() == coorDim, "error");
     TV_ASSERT_RT_ERR(outSpatialShape.size() == coorDim, "error");
@@ -46,13 +46,13 @@ namespace spconv
     TV_ASSERT_RT_ERR(outPadding.size() == coorDim, "error");
     TV_ASSERT_RT_ERR(dilation.size() == coorDim, "error");
     auto kernelVolume = kernelSize[0];
-    for (int i = 1; i < kernelSize.size(); ++i)
+    for (size_t i = 1; i < kernelSize.size(); ++i)
     {
       kernelVolume *= kernelSize[i];
     }
     TV_ASSERT_RT_ERR(kernelVolume <= 256, "error");
     auto outputVolume = outSpatialShape[0];
-    for (int i = 1; i < outSpatialShape.size(); ++i)
+    for (size_t i = 1; i < outSpatialShape.size(); ++i)
     {
       outputVolume *= outSpatialShape[i];
     }
@@ -74,7 +74,7 @@ namespace spconv
     auto indicePairUnique =
         torch::full({indicePairs.numel() / 2 + 1}, std::numeric_limits<int>::max(),
                     torch::dtype(torch::kInt32).device(indices.device()));
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       outSpatialShape32.push_back(outSpatialShape[i]);
       kernelSize32.push_back(kernelSize[i]);
@@ -98,16 +98,17 @@ namespace spconv
         auto getIndicePairFtor =
             functor::CreateSubMIndicePairFunctor<tv::CPU, int, int, NDim>();
         numActOut = getIndicePairFtor(
-            tv::CPU(), tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
+            tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
             tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum), kernelSize32,
-            stride32, padding32, dilation32, outSpatialShape32, transpose);
+            stride32, padding32, dilation32, outSpatialShape32);
       }
       else
       {
         auto getIndicePairFtor =
             functor::CreateSubMIndicePairFunctor<tv::GPU, int, int, NDim>();
         numActOut = getIndicePairFtor(
-            tv::TorchGPU(), tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
+            tv::TorchGPU(),
+            tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
             tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum), kernelSize32,
             stride32, padding32, dilation32, outSpatialShape32, transpose);
       }
@@ -116,13 +117,13 @@ namespace spconv
     else
     {
       torch::Tensor outInds =
-          torch::zeros({numAct * kernelVolume, coorDim + 1},
+          torch::zeros({numAct * kernelVolume, static_cast<long>(coorDim + 1)},
                        torch::dtype(torch::kInt32).device(indices.device()));
       if (indices.device().type() == torch::kCPU)
       {
         auto getIndicePairFtor = functor::CreateConvIndicePairFunctor<tv::CPU, int, int, NDim>();
         numActOut = getIndicePairFtor(
-            tv::CPU(), tv::torch2tv<const int>(indices),
+            tv::torch2tv<const int>(indices),
             tv::torch2tv<int>(outInds), tv::torch2tv<int>(gridOut),
             tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum), kernelSize32,
             stride32, padding32, dilation32, outSpatialShape32, transpose);
@@ -144,9 +145,10 @@ namespace spconv
           auto res = torch::_unique(indicePairUnique);
           indicePairUnique = std::get<0>(res);
           numActOut = getIndicePairFtorP2(
-              tv::TorchGPU(), tv::torch2tv<const int>(indices),
+              tv::TorchGPU(),
+              tv::torch2tv<const int>(indices),
               tv::torch2tv<int>(outInds), tv::torch2tv<int>(gridOut),
-              tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum),
+              tv::torch2tv<int>(indicePairs),
               tv::torch2tv<int>(indicePairUnique), outSpatialShape32, transpose);
         }
       }
@@ -157,7 +159,7 @@ namespace spconv
   template <unsigned NDim>
   std::vector<torch::Tensor>
   getIndicePairPreGrid(torch::Tensor indices, torch::Tensor gridOut, int64_t batchSize,
-                       std::vector<int64_t> outSpatialShape, std::vector<int64_t> spatialShape,
+                       std::vector<int64_t> outSpatialShape,
                        std::vector<int64_t> kernelSize, std::vector<int64_t> stride,
                        std::vector<int64_t> padding, std::vector<int64_t> dilation,
                        std::vector<int64_t> outPadding, int64_t _subM, int64_t _transpose)
@@ -166,7 +168,7 @@ namespace spconv
     bool subM = _subM != 0;
     bool transpose = _transpose != 0;
     auto numAct = indices.size(0);
-    auto coorDim = indices.size(1) - 1; // batchIdx + xyz
+    std::vector<int64_t>::size_type coorDim = indices.size(1) - 1; // batchIdx + xyz
     TV_ASSERT_RT_ERR(NDim == coorDim, "error");
     TV_ASSERT_RT_ERR(kernelSize.size() == coorDim, "error");
     TV_ASSERT_RT_ERR(outSpatialShape.size() == coorDim, "error");
@@ -175,13 +177,13 @@ namespace spconv
     TV_ASSERT_RT_ERR(outPadding.size() == coorDim, "error");
     TV_ASSERT_RT_ERR(dilation.size() == coorDim, "error");
     auto kernelVolume = kernelSize[0];
-    for (int i = 1; i < kernelSize.size(); ++i)
+    for (size_t i = 1; i < kernelSize.size(); ++i)
     {
       kernelVolume *= kernelSize[i];
     }
     TV_ASSERT_RT_ERR(kernelVolume <= 256, "error");
     auto outputVolume = outSpatialShape[0];
-    for (int i = 1; i < outSpatialShape.size(); ++i)
+    for (size_t i = 1; i < outSpatialShape.size(); ++i)
     {
       outputVolume *= outSpatialShape[i];
     }
@@ -201,7 +203,7 @@ namespace spconv
     auto indicePairUnique =
         torch::full({indicePairs.numel() / 2 + 1}, std::numeric_limits<int>::max(),
                     torch::dtype(torch::kInt32).device(indices.device()));
-    for (int i = 0; i < NDim; ++i)
+    for (size_t i = 0; i < NDim; ++i)
     {
       outSpatialShape32.push_back(outSpatialShape[i]);
       kernelSize32.push_back(kernelSize[i]);
@@ -225,9 +227,9 @@ namespace spconv
         auto getIndicePairFtor =
             functor::CreateSubMIndicePairFunctor<tv::CPU, int, int, NDim>();
         numActOut = getIndicePairFtor(
-            tv::CPU(), tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
+            tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
             tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum), kernelSize32,
-            stride32, padding32, dilation32, outSpatialShape32, transpose);
+            stride32, padding32, dilation32, outSpatialShape32);
         gridOut.fill_(-1);
       }
       else
@@ -235,25 +237,26 @@ namespace spconv
         auto getIndicePairFtor =
             functor::CreateSubMIndicePairFunctor<tv::GPU, int, int, NDim>();
         numActOut = getIndicePairFtor(
-            tv::TorchGPU(), tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
+            tv::TorchGPU(),
+            tv::torch2tv<const int>(indices), tv::torch2tv<int>(gridOut),
             tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum), kernelSize32,
-            stride32, padding32, dilation32, outSpatialShape32, transpose, true);
+            stride32, padding32, dilation32, outSpatialShape32, transpose);
       }
       return {indices, indicePairs, indiceNum};
     }
     else
     {
       torch::Tensor outInds =
-          torch::zeros({numAct * kernelVolume, coorDim + 1},
+          torch::zeros({numAct * kernelVolume, static_cast<long>(coorDim) + 1},
                        torch::dtype(torch::kInt32).device(indices.device()));
       if (indices.device().type() == torch::kCPU)
       {
         auto getIndicePairFtor = functor::CreateConvIndicePairFunctor<tv::CPU, int, int, NDim>();
         numActOut = getIndicePairFtor(
-            tv::CPU(), tv::torch2tv<const int>(indices),
+            tv::torch2tv<const int>(indices),
             tv::torch2tv<int>(outInds), tv::torch2tv<int>(gridOut),
             tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum), kernelSize32,
-            stride32, padding32, dilation32, outSpatialShape32, transpose, true);
+            stride32, padding32, dilation32, outSpatialShape32, transpose);
         gridOut.fill_(-1);
       }
       else
@@ -273,10 +276,11 @@ namespace spconv
           auto res = torch::_unique(indicePairUnique);
           indicePairUnique = std::get<0>(res);
           numActOut = getIndicePairFtorP2(
-              tv::TorchGPU(), tv::torch2tv<const int>(indices),
+              tv::TorchGPU(),
+              tv::torch2tv<const int>(indices),
               tv::torch2tv<int>(outInds), tv::torch2tv<int>(gridOut),
-              tv::torch2tv<int>(indicePairs), tv::torch2tv<int>(indiceNum),
-              tv::torch2tv<int>(indicePairUnique), outSpatialShape32, transpose, true);
+              tv::torch2tv<int>(indicePairs),
+              tv::torch2tv<int>(indicePairUnique), outSpatialShape32, true);
         }
       }
       return {outInds.slice(0, 0, numActOut), indicePairs, indiceNum};
@@ -297,8 +301,8 @@ namespace spconv
     auto numOutPlanes = filters.size(ndim + 1);
     auto indicePairNumCpu = indiceNum.to({torch::kCPU});
     auto indicePairMaxSizeIter = std::max_element(
-        indicePairNumCpu.data<int>(), indicePairNumCpu.data<int>() + kernelVolume);
-    int indicePairMaxOffset = indicePairMaxSizeIter - indicePairNumCpu.data<int>();
+        indicePairNumCpu.data_ptr<int>(), indicePairNumCpu.data_ptr<int>() + kernelVolume);
+    int indicePairMaxOffset = indicePairMaxSizeIter - indicePairNumCpu.data_ptr<int>();
     int indicePairMaxSize = *indicePairMaxSizeIter;
 
     /*if (_subM){
@@ -325,33 +329,31 @@ namespace spconv
       // add.
       torch::mm_out(output, features, filters[indicePairMaxOffset]);
     }
-    double totalGatherTime = 0;
-    double totalGEMMTime = 0;
-    double totalSAddTime = 0;
     for (int i = 0; i < kernelVolume; ++i)
     {
-      auto nHot = indicePairNumCpu.data<int>()[i];
+      auto nHot = indicePairNumCpu.data_ptr<int>()[i];
       if (nHot <= 0 || (subM && i == indicePairMaxOffset))
       {
         continue;
       }
       // auto timer = spconv::CudaContextTimer<>();
       auto outputBufferBlob =
-          torch::from_blob(outputBuffer.data<T>(), {nHot, numOutPlanes}, options);
+          torch::from_blob(outputBuffer.data_ptr<T>(), {nHot, numOutPlanes}, options);
       auto inputBufferBlob =
-          torch::from_blob(inputBuffer.data<T>(), {nHot, numInPlanes}, options);
+          torch::from_blob(inputBuffer.data_ptr<T>(), {nHot, numInPlanes}, options);
 
       if (device == torch::kCPU)
       {
         functor::SparseGatherFunctor<tv::CPU, T, int> gatherFtor;
-        gatherFtor(tv::CPU(), tv::torch2tv<T>(inputBuffer),
+        gatherFtor(tv::torch2tv<T>(inputBuffer),
                    tv::torch2tv<const T>(features),
                    tv::torch2tv<const int>(indicePairs).subview(i, inverse), nHot);
       }
       else
       {
         functor::SparseGatherFunctor<tv::GPU, T, int> gatherFtor;
-        gatherFtor(tv::TorchGPU(), tv::torch2tv<T>(inputBuffer),
+        gatherFtor(tv::TorchGPU(),
+                   tv::torch2tv<T>(inputBuffer),
                    tv::torch2tv<const T>(features),
                    tv::torch2tv<const int>(indicePairs).subview(i, inverse), nHot);
         TV_CHECK_CUDA_ERR();
@@ -369,18 +371,17 @@ namespace spconv
       if (device == torch::kCPU)
       {
         functor::SparseScatterAddFunctor<tv::CPU, T, int> scatterFtor;
-        scatterFtor(tv::CPU(), tv::torch2tv<T>(output),
+        scatterFtor(tv::torch2tv<T>(output),
                     tv::torch2tv<const T>(outputBuffer),
-                    tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot,
-                    true);
+                    tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot);
       }
       else
       {
         functor::SparseScatterAddFunctor<tv::GPU, T, int> scatterFtor;
-        scatterFtor(tv::TorchGPU(), tv::torch2tv<T>(output),
+        scatterFtor(tv::TorchGPU(),
+                    tv::torch2tv<T>(output),
                     tv::torch2tv<const T>(outputBuffer),
-                    tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot,
-                    true);
+                    tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot);
         TV_CHECK_CUDA_ERR();
       }
       // totalSAddTime += timer.report() / 1000.0;
@@ -407,8 +408,8 @@ namespace spconv
     auto numOutPlanes = filters.size(ndim + 1);
     auto indicePairNumCpu = indiceNum.to({torch::kCPU});
     auto indicePairMaxSizeIter = std::max_element(
-        indicePairNumCpu.data<int>(), indicePairNumCpu.data<int>() + kernelVolume);
-    int indicePairMaxOffset = indicePairMaxSizeIter - indicePairNumCpu.data<int>();
+        indicePairNumCpu.data_ptr<int>(), indicePairNumCpu.data_ptr<int>() + kernelVolume);
+    int indicePairMaxOffset = indicePairMaxSizeIter - indicePairNumCpu.data_ptr<int>();
     int indicePairMaxSize = *indicePairMaxSizeIter;
     auto options =
         torch::TensorOptions().dtype(features.dtype()).device(features.device());
@@ -429,7 +430,7 @@ namespace spconv
     }
     for (int i = 0; i < kernelVolume; ++i)
     {
-      auto nHot = indicePairNumCpu.data<int>()[i];
+      auto nHot = indicePairNumCpu.data_ptr<int>()[i];
       if (nHot <= 0 || (subM && i == indicePairMaxOffset))
       {
         continue;
@@ -438,10 +439,10 @@ namespace spconv
       {
         functor::SparseGatherFunctor<tv::CPU, T, int> gatherFtor;
         functor::SparseGatherFunctor<tv::CPU, T, int> gatherFtorOut;
-        gatherFtor(tv::CPU(), tv::torch2tv<T>(inputBuffer),
+        gatherFtor(tv::torch2tv<T>(inputBuffer),
                    tv::torch2tv<const T>(features),
                    tv::torch2tv<const int>(indicePairs).subview(i, inverse), nHot);
-        gatherFtorOut(tv::CPU(), tv::torch2tv<T>(outputBuffer),
+        gatherFtorOut(tv::torch2tv<T>(outputBuffer),
                       tv::torch2tv<const T>(outGrad),
                       tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot);
       }
@@ -449,34 +450,37 @@ namespace spconv
       {
         functor::SparseGatherFunctor<tv::GPU, T, int> gatherFtor;
         functor::SparseGatherFunctor<tv::GPU, T, int> gatherFtorOut;
-        gatherFtor(tv::TorchGPU(), tv::torch2tv<T>(inputBuffer),
+        gatherFtor(tv::TorchGPU(),
+                   tv::torch2tv<T>(inputBuffer),
                    tv::torch2tv<const T>(features),
                    tv::torch2tv<const int>(indicePairs).subview(i, inverse), nHot);
         TV_CHECK_CUDA_ERR();
-        gatherFtorOut(tv::TorchGPU(), tv::torch2tv<T>(outputBuffer),
+        gatherFtorOut(tv::TorchGPU(),
+                      tv::torch2tv<T>(outputBuffer),
                       tv::torch2tv<const T>(outGrad),
                       tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot);
         TV_CHECK_CUDA_ERR();
       }
       auto filterGradSub = filtersGrad[i];
       auto outputBufferBlob =
-          torch::from_blob(outputBuffer.data<T>(), {nHot, numOutPlanes}, options);
+          torch::from_blob(outputBuffer.data_ptr<T>(), {nHot, numOutPlanes}, options);
       auto inputBufferBlob =
-          torch::from_blob(inputBuffer.data<T>(), {nHot, numInPlanes}, options);
+          torch::from_blob(inputBuffer.data_ptr<T>(), {nHot, numInPlanes}, options);
 
       torch::mm_out(filterGradSub, inputBufferBlob.t(), outputBufferBlob);
       torch::mm_out(inputBufferBlob, outputBufferBlob, filters[i].t());
       if (device == torch::kCPU)
       {
         functor::SparseScatterAddFunctor<tv::CPU, T, int> scatterFtor;
-        scatterFtor(tv::CPU(), tv::torch2tv<T>(inputGrad),
+        scatterFtor(tv::torch2tv<T>(inputGrad),
                     tv::torch2tv<const T>(inputBuffer),
                     tv::torch2tv<const int>(indicePairs).subview(i, inverse), nHot);
       }
       else
       {
         functor::SparseScatterAddFunctor<tv::GPU, T, int> scatterFtor;
-        scatterFtor(tv::TorchGPU(), tv::torch2tv<T>(inputGrad),
+        scatterFtor(tv::TorchGPU(),
+                    tv::torch2tv<T>(inputGrad),
                     tv::torch2tv<const T>(inputBuffer),
                     tv::torch2tv<const int>(indicePairs).subview(i, inverse), nHot);
         TV_CHECK_CUDA_ERR();
@@ -500,13 +504,12 @@ namespace spconv
     auto numOutPlanes = filters.size(ndim + 1);
     auto indicePairNumCpu = indiceNum.to({torch::kCPU});
     auto totalActsTen = indicePairNumCpu.sum();
-    auto totalActs = indicePairNumCpu.data<int>()[0];
     auto indicePairMaxSizeIter = std::max_element(
-        indicePairNumCpu.data<int>(), indicePairNumCpu.data<int>() + kernelVolume);
-    int indicePairMaxOffset = indicePairMaxSizeIter - indicePairNumCpu.data<int>();
+        indicePairNumCpu.data_ptr<int>(), indicePairNumCpu.data_ptr<int>() + kernelVolume);
+    int indicePairMaxOffset = indicePairMaxSizeIter - indicePairNumCpu.data_ptr<int>();
     int indicePairMaxSize = *indicePairMaxSizeIter;
-    std::vector<int> indicePairNumVec(indicePairNumCpu.data<int>(),
-                                      indicePairNumCpu.data<int>() + kernelVolume);
+    std::vector<int> indicePairNumVec(indicePairNumCpu.data_ptr<int>(),
+                                      indicePairNumCpu.data_ptr<int>() + kernelVolume);
     indicePairNumVec.erase(indicePairNumVec.begin() + indicePairMaxOffset);
     int subRuleMaxSize = *std::max_element(indicePairNumVec.begin(), indicePairNumVec.end());
     if (subM)
@@ -531,13 +534,9 @@ namespace spconv
       // add.
       torch::mm_out(output, features, filters[indicePairMaxOffset]);
     }
-    double totalGatherTime = 0;
-    double totalGEMMTime = 0;
-    double totalSAddTime = 0;
-    // auto timer = spconv::CudaContextTimer<>();
     for (int i = 0; i < kernelVolume; ++i)
     {
-      auto nHot = indicePairNumCpu.data<int>()[i];
+      auto nHot = indicePairNumCpu.data_ptr<int>()[i];
       if (nHot <= 0 || (subM && i == indicePairMaxOffset))
       {
         continue;
@@ -571,7 +570,7 @@ namespace spconv
     // totalGatherTime += timer.report() / 1000.0;
     for (int i = 0; i < kernelVolume; ++i)
     {
-      auto nHot = indicePairNumCpu.data<int>()[i];
+      auto nHot = indicePairNumCpu.data_ptr<int>()[i];
       if (nHot <= 0 || (subM && i == indicePairMaxOffset))
       {
         continue;
@@ -587,7 +586,7 @@ namespace spconv
     // totalGEMMTime += timer.report() / 1000.0;
     for (int i = 0; i < kernelVolume; ++i)
     {
-      auto nHot = indicePairNumCpu.data<int>()[i];
+      auto nHot = indicePairNumCpu.data_ptr<int>()[i];
       if (nHot <= 0 || (subM && i == indicePairMaxOffset))
       {
         continue;
@@ -600,7 +599,7 @@ namespace spconv
       if (device == torch::kCPU)
       {
         functor::SparseScatterAddFunctor<tv::CPU, T, int> scatterFtor;
-        scatterFtor(tv::CPU(), tv::torch2tv<T>(output),
+        scatterFtor(tv::torch2tv<T>(output),
                     tv::torch2tv<const T>(outputBufferBlob),
                     tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot,
                     true);
@@ -608,7 +607,7 @@ namespace spconv
       else
       {
         functor::SparseScatterAddFunctor<tv::GPU, T, int> scatterFtor;
-        scatterFtor(tv::TorchGPU(), tv::torch2tv<T>(output),
+        scatterFtor(tv::torch2tv<T>(output),
                     tv::torch2tv<const T>(outputBufferBlob),
                     tv::torch2tv<const int>(indicePairs).subview(i, !inverse), nHot,
                     true);

@@ -27,7 +27,7 @@ struct TorchGPU: public tv::GPU {
 };
 
 template <typename T> void check_torch_dtype(const torch::Tensor &tensor) {
-  switch (tensor.type().scalarType()) {
+  switch (tensor.scalar_type()) {
   case at::ScalarType::Double: {
     auto val = std::is_same<std::remove_const_t<T>, double>::value;
     TV_ASSERT_RT_ERR(val, "error");
@@ -61,6 +61,6 @@ tv::TensorView<T> torch2tv(const torch::Tensor &tensor) {
   for (auto i : tensor.sizes()) {
     shape.push_back(i);
   }
-  return tv::TensorView<T>(tensor.data<std::remove_const_t<T>>(), shape);
+  return tv::TensorView<T>(tensor.data_ptr<std::remove_const_t<T>>(), shape);
 }
 } // namespace tv

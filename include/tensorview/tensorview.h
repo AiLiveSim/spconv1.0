@@ -198,7 +198,7 @@ public:
     typedef std::forward_iterator_tag iterator_category;
     typedef std::ptrdiff_t difference_type;
     TV_HOST_DEVICE_INLINE iterator(pointer ptr) : ptr_(ptr) {}
-    TV_HOST_DEVICE_INLINE self_type operator++(int junk) {
+    TV_HOST_DEVICE_INLINE self_type operator++(int) {
       self_type i = *this;
       ptr_++;
       return i;
@@ -229,7 +229,7 @@ public:
     typedef std::ptrdiff_t difference_type;
     typedef std::forward_iterator_tag iterator_category;
     TV_HOST_DEVICE_INLINE const_iterator(pointer ptr) : ptr_(ptr) {}
-    TV_HOST_DEVICE_INLINE self_type operator++(int junk) {
+    TV_HOST_DEVICE_INLINE self_type operator++(int) {
       self_type i = *this;
       ptr_++;
       return i;
@@ -368,7 +368,7 @@ struct ShapeBase : public SimpleVector<int, MaxDim> {
     TV_ASSERT(start >= 0 && start <= this->mSize);
 #endif
     ShapeBase<MaxDim> shape;
-    for (int i = start; i < this->mSize; ++i) {
+    for (size_t i = start; i < this->mSize; ++i) {
       shape.push_back(this->mArray[i]);
     }
     return shape;
@@ -492,26 +492,26 @@ template <int N> struct ArrayIndexRowMajor {
 };
 
 template <> struct ArrayIndexRowMajor<0> {
-  TV_HOST_DEVICE_INLINE static unsigned run(const Shape &shape,
-                                            const Shape &indexes) {
+  TV_HOST_DEVICE_INLINE static unsigned run(const Shape&,
+                                            const Shape&) {
     return 0;
   }
 };
 
 namespace detail {
 template <typename T> constexpr const char *simpleTypeName(T val = T());
-template <> constexpr const char *simpleTypeName(float val) {
+template <> constexpr const char *simpleTypeName(float) {
   return "float32";
 }
-template <> constexpr const char *simpleTypeName(double val) {
+template <> constexpr const char *simpleTypeName(double) {
   return "float64";
 }
-template <> constexpr const char *simpleTypeName(int val) { return "int32"; }
-template <> constexpr const char *simpleTypeName(unsigned val) {
+template <> constexpr const char *simpleTypeName(int) { return "int32"; }
+template <> constexpr const char *simpleTypeName(unsigned) {
   return "uint32";
 }
-template <> constexpr const char *simpleTypeName(long val) { return "int64"; }
-template <> constexpr const char *simpleTypeName(unsigned long val) {
+template <> constexpr const char *simpleTypeName(long) { return "int64"; }
+template <> constexpr const char *simpleTypeName(unsigned long) {
   return "uint64";
 }
 }; // namespace detail
@@ -1068,16 +1068,16 @@ Os &operator<<(Os &os, const TensorView<const T, Rank> &dt) {
 
 namespace detail {
 template <typename T> constexpr const char *printfTypeFormat(T val = T());
-template <> constexpr const char *printfTypeFormat(float val) { return "%.2f"; }
-template <> constexpr const char *printfTypeFormat(double val) {
+template <> constexpr const char *printfTypeFormat(float) { return "%.2f"; }
+template <> constexpr const char *printfTypeFormat(double) {
   return "%.2f";
 }
-template <> constexpr const char *printfTypeFormat(int val) { return "%d"; }
-template <> constexpr const char *printfTypeFormat(unsigned val) {
+template <> constexpr const char *printfTypeFormat(int) { return "%d"; }
+template <> constexpr const char *printfTypeFormat(unsigned) {
   return "%u";
 }
-template <> constexpr const char *printfTypeFormat(long val) { return "%ld"; }
-template <> constexpr const char *printfTypeFormat(unsigned long val) {
+template <> constexpr const char *printfTypeFormat(long) { return "%ld"; }
+template <> constexpr const char *printfTypeFormat(unsigned long) {
   return "%lu";
 }
 }; // namespace detail
@@ -1094,7 +1094,7 @@ TV_HOST_DEVICE void printTensorView(const TensorView<T> tensor,
   }
   Shape counter = tensor.shape();
   auto tensor_flat = tensor.view(-1);
-  for (int i = 0; i < counter.ndim(); ++i) {
+  for (size_t i = 0; i < counter.ndim(); ++i) {
     counter[i] = 0;
     printf("[");
   }

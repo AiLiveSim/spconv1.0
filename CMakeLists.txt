@@ -20,7 +20,34 @@ add_compile_definitions(_GLIBCXX_USE_CXX11_ABI=0)
 # Set C++ standard to C++17 or later
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Set strict compilation flags for C++ compilers
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    # Strict flags for GCC and Clang
+    add_compile_options(
+        -Wall          # Enable all warnings
+        -Wextra        # Enable extra warnings
+        -Wno-unknown-pragmas # Disable unroll warnings
+        -O3
+        # -Wpedantic     # Enforce strict compliance with standards. Comment to remove unwanted  warning: style of line directive is a GCC extension when using clang
+    )
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Strict flags for MSVC
+    add_compile_options(
+        /W4            # Enable high-level warnings
+        /WX            # Treat all warnings as errors
+    )
+endif()
+
+# CUDA-specific strict flags (only if CUDA is found)
+if (CMAKE_CUDA_COMPILER)
+    # Standard warnings and error flags
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcompiler=-Wall,-Wextra")
+
+    # Optional: suppress specific CUDA warnings if needed
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xcudafe \"--diag_suppress=unsigned_compare_with_zero\"")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Xptxas -O3")
+endif()
 
 # Include the FetchContent module
 include(FetchContent)

@@ -24,7 +24,7 @@ namespace spconv
         struct CreateConvIndicePairFunctorP1
         {
             Index operator()(
-                const Device &d, tv::TensorView<const Index> indicesIn,
+                tv::TensorView<const Index> indicesIn,
                 tv::TensorView<Index> indicesOut, tv::TensorView<IndexGrid> gridsOut,
                 tv::TensorView<Index> indicePairs, tv::TensorView<Index> indiceNum,
                 tv::TensorView<Index> indicePairUnique,
@@ -35,15 +35,52 @@ namespace spconv
                 const tv::SimpleVector<Index, NDim> outSpatialShape, bool transpose);
         };
 
+        // Specialization for GPU
+        template <typename Index, typename IndexGrid, unsigned NDim>
+        struct CreateConvIndicePairFunctorP1<tv::GPU, Index, IndexGrid, NDim>
+        {
+            Index operator()(
+                const tv::GPU &d,  // Specific to GPU
+                tv::TensorView<const Index> indicesIn,
+                tv::TensorView<Index> indicesOut,
+                tv::TensorView<IndexGrid> gridsOut,
+                tv::TensorView<Index> indicePairs,
+                tv::TensorView<Index> indiceNum,
+                tv::TensorView<Index> indicePairUnique,
+                const tv::SimpleVector<Index, NDim> kernelSize,
+                const tv::SimpleVector<Index, NDim> stride,
+                const tv::SimpleVector<Index, NDim> padding,
+                const tv::SimpleVector<Index, NDim> dilation,
+                const tv::SimpleVector<Index, NDim> outSpatialShape,
+                bool transpose);
+        };
+
         template <typename Device, typename Index, typename IndexGrid, unsigned NDim>
         struct CreateConvIndicePairFunctorP2
         {
             Index operator()(
-                const Device &d, tv::TensorView<const Index> indicesIn,
-                tv::TensorView<Index> indicesOut, tv::TensorView<IndexGrid> gridsOut,
-                tv::TensorView<Index> indicePairs, tv::TensorView<Index> indiceNum,
+                tv::TensorView<const Index> indicesIn,
+                tv::TensorView<Index> indicesOut,
+                tv::TensorView<IndexGrid> gridsOut,
+                tv::TensorView<Index> indicePairs,
+                tv::TensorView<Index> indiceNum,
                 tv::TensorView<Index> indicePairUnique,
-                const tv::SimpleVector<Index, NDim> outSpatialShape, bool transpose,
+                const tv::SimpleVector<Index, NDim> outSpatialShape,
+                bool transpose,
+                bool resetGrid = false);
+        };
+        // Specialization for GPU
+        template <typename Index, typename IndexGrid, unsigned NDim>
+        struct CreateConvIndicePairFunctorP2<tv::GPU, Index, IndexGrid, NDim>
+        {
+            Index operator()(
+                const tv::GPU &d,
+                tv::TensorView<const Index> indicesIn,
+                tv::TensorView<Index> indicesOut,
+                tv::TensorView<IndexGrid> gridsOut,
+                tv::TensorView<Index> indicePairs,
+                tv::TensorView<Index> indicePairUnique,
+                const tv::SimpleVector<Index, NDim> outSpatialShape,
                 bool resetGrid = false);
         };
 
@@ -51,27 +88,59 @@ namespace spconv
         struct CreateConvIndicePairFunctor
         {
             Index operator()(
-                const Device &d, tv::TensorView<const Index> indicesIn,
+                tv::TensorView<const Index> indicesIn,
                 tv::TensorView<Index> indicesOut, tv::TensorView<IndexGrid> gridsOut,
                 tv::TensorView<Index> indicePairs, tv::TensorView<Index> indiceNum,
                 const tv::SimpleVector<Index, NDim> kernelSize,
                 const tv::SimpleVector<Index, NDim> stride,
                 const tv::SimpleVector<Index, NDim> padding,
                 const tv::SimpleVector<Index, NDim> dilation,
-                const tv::SimpleVector<Index, NDim> outSpatialShape, bool transpose, bool resetGrid = false);
+                const tv::SimpleVector<Index, NDim> outSpatialShape, bool transpose);
+        };
+
+        // GPU specialization
+        template <typename Index, typename IndexGrid, unsigned NDim>
+        struct CreateConvIndicePairFunctor<tv::GPU, Index, IndexGrid, NDim>
+        {
+            Index operator()(
+                const tv::GPU &d,
+                tv::TensorView<const Index> indicesIn,
+                tv::TensorView<Index> indicesOut, tv::TensorView<IndexGrid> gridsOut,
+                tv::TensorView<Index> indicePairs, tv::TensorView<Index> indiceNum,
+                const tv::SimpleVector<Index, NDim> kernelSize,
+                const tv::SimpleVector<Index, NDim> stride,
+                const tv::SimpleVector<Index, NDim> padding,
+                const tv::SimpleVector<Index, NDim> dilation,
+                const tv::SimpleVector<Index, NDim> outSpatialShape, bool transpose);
         };
 
         template <typename Device, typename Index, typename IndexGrid, unsigned NDim>
         struct CreateSubMIndicePairFunctor
         {
             Index operator()(
-                const Device &d, tv::TensorView<const Index> indicesIn, tv::TensorView<IndexGrid> gridsOut,
+                tv::TensorView<const Index> indicesIn, tv::TensorView<IndexGrid> gridsOut,
                 tv::TensorView<Index> indicePairs, tv::TensorView<Index> indiceNum,
                 const tv::SimpleVector<Index, NDim> kernelSize,
                 const tv::SimpleVector<Index, NDim> stride,
                 const tv::SimpleVector<Index, NDim> padding,
                 const tv::SimpleVector<Index, NDim> dilation,
-                const tv::SimpleVector<Index, NDim> outSpatialShape, bool transpose, bool resetGrid = false);
+                const tv::SimpleVector<Index, NDim> outSpatialShape);
+        };
+
+        // GPU specialization
+        template <typename Index, typename IndexGrid, unsigned NDim>
+        struct CreateSubMIndicePairFunctor<tv::GPU, Index, IndexGrid, NDim> {
+            Index operator()(const tv::GPU &d,  // Added device parameter for GPU specialization
+                             tv::TensorView<const Index> indicesIn,
+                             tv::TensorView<IndexGrid> gridsOut,
+                             tv::TensorView<Index> indicePairs,
+                             tv::TensorView<Index> indiceNum,
+                             const tv::SimpleVector<Index, NDim> kernelSize,
+                             const tv::SimpleVector<Index, NDim> stride,
+                             const tv::SimpleVector<Index, NDim> padding,
+                             const tv::SimpleVector<Index, NDim> dilation,
+                             const tv::SimpleVector<Index, NDim> outSpatialShape,
+                             bool resetGrid);
         };
     } // namespace functor
 } // namespace spconv

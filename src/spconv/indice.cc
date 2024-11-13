@@ -14,7 +14,7 @@
 
 #include <spconv/geometry.h>
 #include <spconv/indice.h>
-#include <spconv/spconv_ops.h>
+
 #include <torch/script.h>
 
 namespace spconv
@@ -22,10 +22,8 @@ namespace spconv
 
   namespace functor
   {
-    template <typename Index, typename IndexGrid, unsigned NDim>
-    struct CreateConvIndicePairFunctor<tv::CPU, Index, IndexGrid, NDim>
-    {
-      Index operator()(const tv::CPU &d, tv::TensorView<const Index> indicesIn,
+    template <typename Device, typename Index, typename IndexGrid, unsigned NDim>
+      Index CreateConvIndicePairFunctor<Device, Index, IndexGrid, NDim>::operator()(tv::TensorView<const Index> indicesIn,
                        tv::TensorView<Index> indicesOut,
                        tv::TensorView<IndexGrid> gridsOut,
                        tv::TensorView<Index> indicePairs,
@@ -35,26 +33,16 @@ namespace spconv
                        const tv::SimpleVector<Index, NDim> padding,
                        const tv::SimpleVector<Index, NDim> dilation,
                        const tv::SimpleVector<Index, NDim> outSpatialShape,
-                       bool transpose, bool resetGrid)
-      {
+                       bool transpose) {
         if (transpose)
-          return getIndicePairsDeConv<Index, IndexGrid, NDim>(
-              indicesIn, indicesOut,
-              gridsOut, indicePairs, indiceNum,
-              kernelSize.data(), stride.data(), padding.data(), dilation.data(),
-              outSpatialShape.data());
+            return getIndicePairsDeConv<Index, IndexGrid, NDim>(indicesIn, indicesOut, gridsOut, indicePairs, indiceNum, kernelSize.data(), stride.data(), padding.data(),
+                                                                dilation.data(), outSpatialShape.data());
         else
-          return getIndicePairsConv<Index, IndexGrid, NDim>(
-              indicesIn, indicesOut,
-              gridsOut, indicePairs, indiceNum,
-              kernelSize.data(), stride.data(), padding.data(), dilation.data(),
-              outSpatialShape.data());
-      }
-    };
-    template <typename Index, typename IndexGrid, unsigned NDim>
-    struct CreateSubMIndicePairFunctor<tv::CPU, Index, IndexGrid, NDim>
-    {
-      Index operator()(const tv::CPU &d, tv::TensorView<const Index> indicesIn,
+            return getIndicePairsConv<Index, IndexGrid, NDim>(indicesIn, indicesOut, gridsOut, indicePairs, indiceNum, kernelSize.data(), stride.data(), padding.data(),
+                                                              dilation.data(), outSpatialShape.data());
+    }
+    template <typename Device, typename Index, typename IndexGrid, unsigned NDim>
+      Index CreateSubMIndicePairFunctor<Device, Index, IndexGrid, NDim>::operator()(tv::TensorView<const Index> indicesIn,
                        tv::TensorView<IndexGrid> gridsOut,
                        tv::TensorView<Index> indicePairs,
                        tv::TensorView<Index> indiceNum,
@@ -62,15 +50,10 @@ namespace spconv
                        const tv::SimpleVector<Index, NDim> stride,
                        const tv::SimpleVector<Index, NDim> padding,
                        const tv::SimpleVector<Index, NDim> dilation,
-                       const tv::SimpleVector<Index, NDim> outSpatialShape,
-                       bool transpose, bool resetGrid)
-      {
-        return getIndicePairsSubM<Index, IndexGrid, NDim>(
-            indicesIn,
-            gridsOut, indicePairs, indiceNum,
-            kernelSize.data(), stride.data(), padding.data(), dilation.data(), outSpatialShape.data());
-      }
-    };
+                       const tv::SimpleVector<Index, NDim> outSpatialShape) {
+        return getIndicePairsSubM<Index, IndexGrid, NDim>(indicesIn, gridsOut, indicePairs, indiceNum, kernelSize.data(), stride.data(), padding.data(), dilation.data(),
+                                                          outSpatialShape.data());
+    }
   } // namespace functor
 
 #define DECLARE_CPU_SPECS_INDEX_NDIM(Index, NDIM)                                  \

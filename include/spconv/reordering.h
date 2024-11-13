@@ -15,24 +15,56 @@
 #ifndef SPARSE_REORDERING_FUNCTOR_H_
 #define SPARSE_REORDERING_FUNCTOR_H_
 #include <tensorview/tensorview.h>
+#include <ATen/ATen.h>
+#include <spconv/mp_helper.h>
 
-namespace spconv
-{
-    namespace functor
-    {
-        template <typename Device, typename T, typename Index>
+namespace spconv {
+    namespace functor {
+        // Base declaration for SparseGatherFunctor
+        template <typename Device,typename T, typename Index>
         struct SparseGatherFunctor
         {
-            void operator()(const Device &d, tv::TensorView<T> buffer, tv::TensorView<const T> features,
-                            tv::TensorView<const Index> indices, int size);
+            void operator()(tv::TensorView<T> buffer,
+                            tv::TensorView<const T> features,
+                            tv::TensorView<const Index> indices,
+                            int size);
         };
 
+        // GPU specialization for SparseGatherFunctor
+        template <typename T, typename Index>
+        struct SparseGatherFunctor<tv::GPU, T, Index>
+        {
+            using vecload_type_t = std::conditional_t<std::is_same<T, at::Half>::value, int2, int4>;
+            using kernel_block_t = mp_list_c<int, 64, 32, 16>;
+            void operator()(const tv::GPU &d,  // Device parameter for GPU specialization
+                            tv::TensorView<T> buffer,
+                            tv::TensorView<const T> features,
+                            tv::TensorView<const Index> indices,
+                            int size);
+        };
+
+        // Base declaration for SparseScatterAddFunctor
         template <typename Device, typename T, typename Index>
         struct SparseScatterAddFunctor
         {
-            void operator()(const Device &d, tv::TensorView<T> out_features,
-                            tv::TensorView<const T> buffer, tv::TensorView<const Index> indices,
-                            int size, bool stable = false);
+            void operator()(tv::TensorView<T> out_features,
+                            tv::TensorView<const T> buffer,
+                            tv::TensorView<const Index> indices,
+                            int size);
+        };
+
+        // GPU specialization for SparseScatterAddFunctor
+        template <typename T, typename Index>
+        struct SparseScatterAddFunctor<tv::GPU, T, Index>
+        {
+            using vecload_type_t =
+                std::conditional_t<std::is_same<T, at::Half>::value, int2, int4>;
+            using kernel_block_t = mp_list_c<int, 64, 32, 16>;
+            void operator()(const tv::GPU &d,  // Device parameter for GPU specialization
+                            tv::TensorView<T> out_features,
+                            tv::TensorView<const T> buffer,
+                            tv::TensorView<const Index> indices,
+                            int size);
         };
     } // namespace functor
 } // namespace spconv
